@@ -66,8 +66,13 @@ Optional settings are listed in `.env.example` (copy to `.env`).
 | `doctor` | Ophthalmologist | Screenings, clinical review, reports, analytics |
 | `admin` | Administrator | Users, review rules, audit trail, reports, analytics |
 
-Password: value of `RETINAASSIST_DEMO_PASSWORD` (local default `RetinaDemo2026!`), applied when the database is
-first created. Change passwords in **Settings**. New sign-ups via **Request access** stay inactive until an admin approves them.
+Locally, all three use `RETINAASSIST_DEMO_PASSWORD` (local default `RetinaDemo2026!`), applied when the database is
+first created; `RETINAASSIST_ADMIN_PASSWORD` optionally gives `admin` its own password. Change passwords in **Settings**.
+New sign-ups via **Request access** stay inactive until an admin approves them.
+
+On a public deployment the default password is never used: the app refuses to start unless both passwords are set as
+secrets, and the admin password must differ from the demo password. Demo sign-in details are shared by the project
+owner on request; the admin password is never shared.
 
 ### Tests
 
@@ -75,25 +80,30 @@ first created. Change passwords in **Settings**. New sign-ups via **Request acce
 python -m unittest discover -s tests -v
 ```
 
-Uses the real model and the image(s) in `test_images/`.
+Uses the real model and the image(s) in `test_images/`. The bundled `synthetic_fundus.png` is a generated, synthetic
+test fixture (not a patient image), so its predictions are meaningless — it only exercises the pipeline.
 
 ## Deployment
 
-The app is deployed as a **Hugging Face Space (Docker SDK)**: the free CPU tier (2 vCPU, 16 GB RAM) can run
-TensorFlow inference, which small free web tiers with ~512 MB RAM cannot do reliably.
+The app is prepared for a **Hugging Face Space (Docker SDK)** on CPU Basic hardware (2 vCPU, 16 GB RAM, 50 GB
+non-persistent disk), which can run TensorFlow inference. CPU Basic has no hourly cost, but Hugging Face currently
+requires a **PRO subscription to create Docker Spaces** on personal accounts.
 
 - `deploy/huggingface/Dockerfile` and `deploy/huggingface/README.md` go in the root of the Space repository.
   The image clones this GitHub repository, verifies the model's SHA-256 checksum, and starts
   `gunicorn wsgi:app` on port 7860. After pushing new commits to GitHub, use **Factory rebuild** in the Space settings.
-- The root `Dockerfile` builds the same image from a local checkout for any Docker host.
-- Space **secrets** (Settings → Variables and secrets):
-  - `RETINAASSIST_SECRET_KEY` — long random string used to sign session cookies (required).
-  - `RETINAASSIST_DEMO_PASSWORD` — password for the demo accounts (otherwise the documented local default is used).
-- `RETINAASSIST_ENV=production` is set in the image: secure, HTTPS-only session cookies and no debug mode.
+- The root `Dockerfile` builds the same image from a local checkout for any Docker host (port 7860).
+- Required **secrets** (Space settings → Variables and secrets; never commit them):
+  - `RETINAASSIST_SECRET_KEY` — long random string used to sign session cookies.
+  - `RETINAASSIST_DEMO_PASSWORD` — password for the `doctor` and `staff` demo accounts.
+  - `RETINAASSIST_ADMIN_PASSWORD` — a different password for the `admin` account.
+- `RETINAASSIST_ENV=production` is set in the image: the app refuses to start without the secrets above, uses
+  secure HTTPS-only session cookies, and runs without debug mode.
 
-**Hosting limitations:** free Spaces sleep after a period of inactivity and take a minute or two to wake up (the model
-loads at startup). Their disk is temporary, so the SQLite database, uploaded images and PDF reports are **reset whenever
-the Space restarts or is rebuilt**. Persistent storage would need a paid storage option or an external database.
+**Hosting limitations:** free-hardware Spaces sleep after a period of inactivity and take a minute or two to wake up
+(the model loads at startup). The disk is temporary, so the SQLite database, uploaded images and PDF reports are
+**reset whenever the Space restarts or is rebuilt**, and demo data is visible to everyone using the shared demo
+accounts — never upload real patient images. Persistent storage would need a Storage Bucket or an external database.
 
 ## Responsible use and limitations
 

@@ -11,7 +11,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 RUN apt-get update && apt-get install -y --no-install-recommends libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
-RUN useradd -m -u 1000 user
+RUN useradd -m -u 1000 user && mkdir -p /home/user/app && chown user:user /home/user/app
 WORKDIR /home/user/app
 
 COPY --chown=user requirements.txt .

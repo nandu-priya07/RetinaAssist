@@ -16,3 +16,6 @@ reports/
 *.sqlite3
 secret_key
 
+
+# Real/unlicensed retinal images stay local only
+local_test_images/

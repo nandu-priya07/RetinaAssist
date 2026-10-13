@@ -59,17 +59,25 @@ def create_app(test_config=None):
         REPORT_ROOT=os.path.join(app.instance_path, "reports"),
         MAX_CONTENT_LENGTH=MAX_FILE_BYTES + 512 * 1024,
         DEMO_PASSWORD=os.environ.get("RETINAASSIST_DEMO_PASSWORD", "RetinaDemo2026!"),
+        # The admin account can have its own password so that sharing the demo password never grants admin access.
+        ADMIN_PASSWORD=os.environ.get("RETINAASSIST_ADMIN_PASSWORD"),  # falls back to DEMO_PASSWORD when unset
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE="Lax",
         PERMANENT_SESSION_LIFETIME=timedelta(hours=8),
         CSRF_ENABLED=True,
+        PRODUCTION=False,
     )
     if os.environ.get("RETINAASSIST_ENV") == "production":
+        # Never run a public deployment with a missing secret or a publicly known password.
+        missing = [k for k in ("RETINAASSIST_SECRET_KEY", "RETINAASSIST_DEMO_PASSWORD", "RETINAASSIST_ADMIN_PASSWORD")
+                   if not os.environ.get(k)]
+        if missing:
+            raise RuntimeError("Production requires these secrets to be set: " + ", ".join(missing))
+        if os.environ["RETINAASSIST_ADMIN_PASSWORD"] == os.environ["RETINAASSIST_DEMO_PASSWORD"]:
+            raise RuntimeError("RETINAASSIST_ADMIN_PASSWORD must differ from RETINAASSIST_DEMO_PASSWORD.")
         # Served over HTTPS. Hugging Face Spaces also embeds the app in an iframe on huggingface.co,
         # so the session cookie must be Secure and SameSite=None for sign-in to work there.
-        app.config.update(SESSION_COOKIE_SECURE=True, SESSION_COOKIE_SAMESITE="None")
-        if not os.environ.get("RETINAASSIST_SECRET_KEY"):
-            app.logger.warning("RETINAASSIST_SECRET_KEY is not set; using a generated key (sessions reset on restart).")
+        app.config.update(SESSION_COOKIE_SECURE=True, SESSION_COOKIE_SAMESITE="None", PRODUCTION=True)
     if test_config:
         app.config.update(test_config)
 

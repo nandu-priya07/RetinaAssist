@@ -133,12 +133,15 @@ def init_db(app):
         conn.executescript(SCHEMA)
         for key, value in DEFAULT_SETTINGS.items():
             conn.execute("INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)", (key, value))
-        demo_password = app.config["DEMO_PASSWORD"]
         for username, full_name, email, role in DEMO_USERS:
+            if role == "admin":
+                password = app.config.get("ADMIN_PASSWORD") or app.config["DEMO_PASSWORD"]
+            else:
+                password = app.config["DEMO_PASSWORD"]
             conn.execute(
                 "INSERT OR IGNORE INTO users (username, full_name, email, password_hash, role, is_active, created_at)"
                 " VALUES (?, ?, ?, ?, ?, 1, ?)",
-                (username, full_name, email, generate_password_hash(demo_password), role, now_iso()),
+                (username, full_name, email, generate_password_hash(password), role, now_iso()),
             )
         conn.commit()
     finally:
