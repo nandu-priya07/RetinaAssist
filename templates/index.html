@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+{% block title %}Explainable AI for retinal screening{% endblock %}
+{% block content %}
+<style>
+  /* Home hero only: anatomical eye illustration (decorative artwork) */
+  .hero-eye { position: relative; max-width: 580px; margin-inline: auto; padding: 48px 0 52px; }
+  .hero-eye .he-stage { position: relative; aspect-ratio: 942 / 725; animation: he-in .9s cubic-bezier(.2, .7, .2, 1) both; }
+  .hero-eye .he-atmos { position: absolute; inset: 6% 4% 2% 2%; border-radius: 50%; pointer-events: none;
+    background: radial-gradient(closest-side, rgba(25, 179, 181, .14), rgba(19, 49, 92, .05) 62%, transparent 100%); filter: blur(14px); }
+  .hero-eye .he-stage img { position: relative; width: 100%; height: 100%; object-fit: contain; display: block; }
+  /* Thin cyan scanning beam, clipped to the iris */
+  .hero-eye .he-scan { position: absolute; left: 12.5%; top: 32.5%; width: 19.3%; height: 31.5%; border-radius: 50%; overflow: hidden;
+    pointer-events: none; mix-blend-mode: screen; }
+  .hero-eye .he-scan::before { content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 22%; transform: translateX(-120%); opacity: 0;
+    background: linear-gradient(90deg, rgba(94, 214, 255, 0) 0%, rgba(94, 214, 255, .28) 42%, rgba(200, 248, 255, .85) 50%, rgba(94, 214, 255, .28) 58%, rgba(94, 214, 255, 0) 100%);
+    animation: he-scan 6.5s ease-in-out 1.4s infinite; }
+  .hero-eye .he-glow { position: absolute; left: 9%; top: 27%; width: 26%; height: 42%; border-radius: 50%; pointer-events: none;
+    background: radial-gradient(closest-side, rgba(94, 214, 255, .22), rgba(94, 214, 255, 0)); mix-blend-mode: screen; animation: he-glow 7s ease-in-out 1s infinite; }
+  .hero-eye .he-card { position: absolute; display: flex; align-items: center; gap: .45rem; padding: .34rem .55rem; border-radius: 10px;
+    background: rgba(255, 255, 255, .82); backdrop-filter: blur(10px); border: 1px solid rgba(207, 225, 236, .9); box-shadow: 0 8px 22px -12px rgba(11, 37, 69, .3);
+    animation: he-fade .7s ease-out both; }
+  .hero-eye .he-card .ic { width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; background: #e3f4f4; color: #0f8b8d; font-size: .72rem; flex-shrink: 0; }
+  .hero-eye .he-card strong { font-size: .7rem; font-weight: 600; color: #0b2545; line-height: 1.2; white-space: nowrap; }
+  .hero-eye .he-c1 { top: 6px; left: 4%; animation-delay: .35s; }
+  .hero-eye .he-c2 { top: 6px; right: 2%; animation-delay: .45s; }
+  .hero-eye .he-c3 { bottom: 10px; left: 4%; animation-delay: .55s; }
+  .hero-eye .he-c4 { bottom: 10px; right: 2%; animation-delay: .65s; }
+  .hero-eye-note { text-align: center; margin-top: .25rem; }
+  @keyframes he-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+  @keyframes he-fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+  @keyframes he-scan { 0% { transform: translateX(-120%); opacity: 0; } 8% { opacity: 1; } 55% { opacity: 1; } 62% { transform: translateX(520%); opacity: 0; } 100% { transform: translateX(520%); opacity: 0; } }
+  @keyframes he-glow { 0%, 100% { opacity: .55; } 50% { opacity: .85; } }
+  @media (max-width: 575.98px) {
+    .hero-eye { padding: 0; }
+    .hero-eye .he-labels { display: grid; grid-template-columns: 1fr 1fr; gap: .45rem; margin-top: .4rem; }
+    .hero-eye .he-card { position: static; }
+    .hero-eye .he-card strong { white-space: normal; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hero-eye .he-stage, .hero-eye .he-card, .hero-eye .he-glow { animation: none; }
+    .hero-eye .he-scan { display: none; }
+    .hero-eye .he-glow { opacity: .6; }
+  }
+</style>
+<section class="hero">
+  <div class="container position-relative">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-6">
+        <span class="eyebrow"><span class="dot"></span> Research prototype · Clinical decision support</span>
+        <h1 class="mt-3">Explainable AI for <span class="grad">retinal screening</span> teams.</h1>
+        <p class="lead mt-3">RetinaAssist analyses fundus photographs for signs associated with diabetic retinopathy, shows <em>where</em>
+          the model looked with Grad-CAM, and helps clinical teams decide which cases to review first — the decision always stays with the clinician.</p>
+        <div class="d-flex flex-wrap gap-2 mt-4">
+          <a href="{{ url_for('dashboard') if current_user else url_for('login') }}" class="btn btn-teal btn-lg">Explore platform <i class="bi bi-arrow-right"></i></a>
+          <a href="{{ url_for('about') }}" class="btn btn-outline-navy btn-lg">How it works</a>
+        </div>
+        <div class="hero-trust">
+          <span><i class="bi bi-shield-check"></i> Role-based access &amp; audit trail</span>
+          <span><i class="bi bi-fire"></i> Grad-CAM explanations</span>
+          <span><i class="bi bi-person-badge"></i> Clinician-in-the-loop</span>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="hero-eye">
+          <div class="he-stage">
+            <div class="he-atmos" aria-hidden="true"></div>
+            <img src="{{ url_for('static', filename='images/hero-eye.webp') }}" alt="Illustrative 3D anatomical eye with a cutaway showing the retina and optic nerve — decorative artwork, not a patient scan" width="942" height="725">
+            <div class="he-glow" aria-hidden="true"></div>
+            <div class="he-scan" aria-hidden="true"></div>
+          </div>
+          <div class="he-labels">
+            <div class="he-card he-c1"><div class="ic"><i class="bi bi-layers"></i></div><strong>Five-grade classification</strong></div>
+            <div class="he-card he-c2"><div class="ic"><i class="bi bi-fire"></i></div><strong>Grad-CAM explainability</strong></div>
+            <div class="he-card he-c3"><div class="ic"><i class="bi bi-camera"></i></div><strong>Image quality checks</strong></div>
+            <div class="he-card he-c4"><div class="ic"><i class="bi bi-person-check"></i></div><strong>Clinician-in-the-loop review</strong></div>
+          </div>
+        </div>
+        <div class="hero-eye-note"><span class="illus-tag"><i class="bi bi-palette"></i> Illustration — not a patient scan</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="section-head center">
+      <span class="eyebrow"><span class="dot"></span> Core capabilities</span>
+      <h2>Three tools, one review workflow</h2>
+      <p>Each output is presented with its limitations, so clinicians can weigh it appropriately.</p>
+    </div>
+    <div class="row g-3 g-lg-4">
+      {% for icon, title, text, points in [
+        ('bi-cpu', 'RetinaGrade AI', 'A fine-tuned EfficientNetB0 model returns one of five diabetic retinopathy grades with all five class scores.', ['Raw model scores, not calibrated probabilities', 'Validated file type, size and decoding']),
+        ('bi-eye', 'Explainable Retina Lens', 'Grad-CAM heatmaps and overlays show which image regions most influenced the model output.', ['Original, heatmap, overlay & side-by-side', 'Visualises model attention, not lesions']),
+        ('bi-sliders', 'Priority & Uncertainty Engine', 'Configurable rules flag recapture needs, uncertain outputs and clinic-defined priority grades.', ['Every flag states why it fired', 'Operational priority, not severity'])] %}
+      <div class="col-md-4">
+        <div class="feature-card h-100">
+          <div class="feature-icon"><i class="bi {{ icon }}"></i></div>
+          <h3 class="mt-3 mb-2">{{ title }}</h3>
+          <p class="text-secondary mb-0">{{ text }}</p>
+          <ul class="feature-list">{% for p in points %}<li><i class="bi bi-check2"></i>{{ p }}</li>{% endfor %}</ul>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="section section-soft">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-5">
+        <div class="showcase">
+          <span class="illus-tag"><i class="bi bi-palette"></i> Illustrative visualization</span>
+          <img src="{{ url_for('static', filename='images/retina-illustration.webp') }}" alt="Illustrative drawing of a retina showing the optic disc, macula and vessel arcades" loading="lazy" width="900" height="900">
+          <div class="legend"><span>Optic disc · macula · vascular arcades</span><span>Not patient data</span></div>
+        </div>
+      </div>
+      <div class="col-lg-7">
+        <span class="eyebrow"><span class="dot"></span> Explainability</span>
+        <h2 class="mt-3 mb-2" style="font-size:1.6rem;font-weight:800;letter-spacing:-.03em">See what the model responded to</h2>
+        <p class="text-secondary">For every uploaded image, RetinaAssist computes a Grad-CAM map from the final convolutional layer of the model and
+          shows it next to the original photograph — so reviewers can judge whether the model's attention is plausible.</p>
+        <ul class="check-list mt-3">
+          <li><i class="bi bi-check-circle-fill"></i><div><strong>Real outputs only.</strong> Analysis pages show the uploaded image and the Grad-CAM generated for it — never artwork.</div></li>
+          <li><i class="bi bi-check-circle-fill"></i><div><strong>Honest framing.</strong> Heatmaps show model influence; they do not confirm lesions or a diagnosis.</div></li>
+          <li><i class="bi bi-check-circle-fill"></i><div><strong>Clinician decides.</strong> Reviewers record agreement or disagreement, and every action is audited.</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="section-head center">
+      <span class="eyebrow"><span class="dot"></span> Workflow</span>
+      <h2>From image capture to clinician review</h2>
+    </div>
+    <div class="row g-3 g-lg-4">
+      {% for n, icon, title, text in [
+        ('1', 'bi-cloud-arrow-up', 'Register & upload', 'Screening staff enter a synthetic patient code and upload a fundus photograph.'),
+        ('2', 'bi-cpu', 'Checks & analysis', 'Preliminary image checks run, then the model returns a grade, five scores and Grad-CAM views.'),
+        ('3', 'bi-flag', 'Prioritise', 'Transparent rules flag uncertain outputs, recapture needs and clinic-priority grades.'),
+        ('4', 'bi-person-check', 'Clinician review', 'An ophthalmologist reviews, records agreement or disagreement, and exports a PDF report.')] %}
+      <div class="col-sm-6 col-lg-3">
+        <div class="step-card h-100">
+          <div class="d-flex align-items-center justify-content-between"><div class="step-num">{{ n }}</div><i class="bi {{ icon }} text-teal fs-5"></i></div>
+          <h3 class="mt-3 mb-1">{{ title }}</h3><p class="text-secondary mb-0">{{ text }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="section section-soft">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow"><span class="dot"></span> Intended users</span>
+      <h2>Designed for healthcare organisations</h2>
+      <p>Proposed business model: B2B licensing or hosting for hospitals and screening programmes. RetinaAssist is not currently deployed in any hospital.</p>
+    </div>
+    <div class="row g-3 g-lg-4">
+      {% for icon, title, text in [
+        ('bi-person-badge', 'Ophthalmologists', 'Review AI-assisted results, inspect Grad-CAM views and record clinical judgement.'),
+        ('bi-clipboard2-pulse', 'Screening staff & optometrists', 'Register screenings, upload images and route cases using review rules.'),
+        ('bi-building', 'Hospital administrators', 'Monitor screening volumes, pending reviews and operational metrics.'),
+        ('bi-hospital', 'Diabetes screening centres', 'Support high-volume programmes with consistent, transparent triage rules.')] %}
+      <div class="col-sm-6 col-lg-3">
+        <div class="user-card h-100"><i class="bi {{ icon }}"></i><h3 class="mt-2 mb-1">{{ title }}</h3><p class="text-secondary mb-0">{{ text }}</p></div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="disclaimer-panel">
+      <div class="row align-items-center g-3">
+        <div class="col-lg-9">
+          <h2 class="mb-2"><i class="bi bi-shield-exclamation me-2"></i>Research disclaimer</h2>
+          <p class="mb-0">RetinaAssist is an academic research prototype. Its predictions are not diagnoses, its class scores are not calibrated disease
+            probabilities, and it has not been externally or clinically validated. It does not recommend treatment or medication. A real clinical deployment
+            would require external validation, privacy safeguards, a security review and regulatory assessment.</p>
+        </div>
+        <div class="col-lg-3 text-lg-end">
+          <a href="{{ url_for('dashboard') if current_user else url_for('login') }}" class="btn btn-light btn-lg">Explore platform <i class="bi bi-arrow-right"></i></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

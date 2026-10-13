@@ -1,0 +1,12 @@
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="flash-stack pt-3">
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category if category in ['success','danger','warning','info'] else 'info' }} alert-dismissible fade show" role="alert">
+        <i class="bi {{ {'success':'bi-check-circle','danger':'bi-exclamation-octagon','warning':'bi-exclamation-triangle'}.get(category, 'bi-info-circle') }} me-2"></i>{{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}

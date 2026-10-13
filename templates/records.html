@@ -1,0 +1,70 @@
+{% extends "app_base.html" %}
+{% from "partials/macros.html" import priority_badge, quality_badge, status_badge, grade_pill with context %}
+{% block title %}Case records{% endblock %}
+{% block page_title %}Case records{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1>Case records</h1><p>Screening cases stored in the local database. Synthetic patient codes only.</p></div>
+  <div class="actions">{% if current_user.role in ['staff', 'doctor'] %}<a href="{{ url_for('screening') }}" class="btn btn-teal"><i class="bi bi-plus-lg"></i> New screening</a>{% endif %}</div>
+</div>
+
+<form class="filter-bar" method="get" role="search">
+  <div class="row g-2 align-items-end">
+    <div class="col-lg-3"><label class="form-label" for="q">Search</label>
+      <div class="input-icon"><i class="bi bi-search"></i><input class="form-control" id="q" name="q" placeholder="Case ID or patient code" value="{{ filters.get('q', '') }}"></div></div>
+    <div class="col-6 col-lg-2"><label class="form-label" for="grade">Model grade</label>
+      <select class="form-select" id="grade" name="grade"><option value="">All grades</option>
+        {% for n in CLASS_NAMES %}<option value="{{ loop.index0 }}" {{ 'selected' if filters.get('grade') == loop.index0|string }}>{{ loop.index0 }} · {{ n }}</option>{% endfor %}</select></div>
+    <div class="col-6 col-lg-2"><label class="form-label" for="status">Review status</label>
+      <select class="form-select" id="status" name="status"><option value="">All statuses</option>
+        {% for k, v in REVIEW_STATUSES.items() %}<option value="{{ k }}" {{ 'selected' if filters.get('status') == k }}>{{ v }}</option>{% endfor %}</select></div>
+    <div class="col-6 col-lg-2"><label class="form-label" for="priority">Priority</label>
+      <select class="form-select" id="priority" name="priority"><option value="">All priorities</option>
+        {% for k, v in PRIORITY_LABELS.items() %}<option value="{{ k }}" {{ 'selected' if filters.get('priority') == k }}>{{ v }}</option>{% endfor %}</select></div>
+    <div class="col-6 col-lg-1"><label class="form-label" for="quality">Image</label>
+      <select class="form-select" id="quality" name="quality"><option value="">All</option>
+        {% for k, v in QUALITY_LABELS.items() %}<option value="{{ k }}" {{ 'selected' if filters.get('quality') == k }}>{{ v }}</option>{% endfor %}</select></div>
+    <div class="col-lg-2 d-flex gap-2"><button class="btn btn-navy flex-fill" type="submit"><i class="bi bi-funnel"></i> Apply</button>
+      <a class="btn btn-outline-secondary" href="{{ url_for('records') }}" title="Clear all filters" aria-label="Clear all filters"><i class="bi bi-x-lg"></i></a></div>
+  </div>
+  {% set active = [] %}
+  {% if filters.get('q') %}{% set _ = active.append('Search: ' ~ filters.get('q')) %}{% endif %}
+  {% if filters.get('grade', '')|length and filters.get('grade').isdigit() and filters.get('grade')|int < 5 %}{% set _ = active.append('Grade: ' ~ CLASS_NAMES[filters.get('grade')|int]) %}{% endif %}
+  {% if filters.get('status') in REVIEW_STATUSES %}{% set _ = active.append('Status: ' ~ REVIEW_STATUSES[filters.get('status')]) %}{% endif %}
+  {% if filters.get('priority') in PRIORITY_LABELS %}{% set _ = active.append('Priority: ' ~ PRIORITY_LABELS[filters.get('priority')]) %}{% endif %}
+  {% if filters.get('quality') in QUALITY_LABELS %}{% set _ = active.append('Image: ' ~ QUALITY_LABELS[filters.get('quality')]) %}{% endif %}
+  {% if active %}<div class="filter-chips">{% for a in active %}<span class="filter-chip"><i class="bi bi-funnel-fill"></i>{{ a }}</span>{% endfor %}</div>{% endif %}
+</form>
+
+<div class="panel">
+  <div class="panel-head"><h2 class="mb-0"><i class="bi bi-folder2-open"></i>{{ cases|length }} case{{ '' if cases|length == 1 else 's' }}</h2>
+    <span class="small text-muted d-none d-sm-inline">Newest first · click a row to open</span></div>
+  {% if cases %}
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead><tr><th>Case</th><th>Patient</th><th>Screened</th><th>Model output</th><th class="text-end">Score</th><th>Image</th><th>Priority</th><th>Review</th></tr></thead>
+      <tbody>
+      {% for c in cases %}
+        <tr class="row-link" data-href="{{ url_for('analysis', case_code=c.case_code) }}">
+          <td><div class="d-flex align-items-center gap-2">
+            <img class="thumb" src="{{ url_for('media', case_code=c.case_code, kind='original.png') }}" alt="" loading="lazy">
+            <a class="case-link" href="{{ url_for('analysis', case_code=c.case_code) }}">{{ c.case_code }}</a></div></td>
+          <td>{{ c.patient_code }}</td>
+          <td class="small text-nowrap text-muted">{{ c.screened_at }}</td>
+          <td>{{ grade_pill(c.predicted_grade, c.predicted_label) }}</td>
+          <td class="text-end fw-semibold" style="font-variant-numeric: tabular-nums">{{ '%.1f' % (c.top_score * 100) }}%</td>
+          <td>{{ quality_badge(c.quality_status) }}</td>
+          <td>{{ priority_badge(c.priority) }}</td>
+          <td>{{ status_badge(c.review_status) }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state"><i class="bi bi-search"></i><p class="fw-semibold mb-1">No matching cases</p>
+    <p class="small text-muted mb-0">Try clearing the filters{% if current_user.role in ['staff','doctor'] %}, or <a href="{{ url_for('screening') }}">create a screening</a>{% endif %}.</p></div>
+  {% endif %}
+</div>
+<p class="small text-muted mt-3 mb-0"><i class="bi bi-info-circle me-1"></i>Score = the model's highest class score (a raw model output, not a calibrated probability). Priority is operational, not medical severity.</p>
+{% endblock %}

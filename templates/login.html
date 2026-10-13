@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Sign in{% endblock %}
+{% block content %}
+<section class="auth-wrap">
+  <div class="container">
+    <div class="auth-shell">
+      <div class="auth-side">
+        <div style="position:relative;z-index:1">
+          <div class="brand text-white"><span class="brand-mark"><i class="bi bi-eye"></i></span> <span>Retina<span class="ai">Assist</span></span></div>
+          <h2 class="mt-4 mb-2">Clinical review, with the reasoning in view.</h2>
+          <p class="small mb-0" style="max-width:270px">AI-assisted screening support for retinal images — every output paired with its explanation and limitations.</p>
+          <ul>
+            <li><i class="bi bi-check2-circle"></i>Five-grade model output with all class scores</li>
+            <li><i class="bi bi-check2-circle"></i>Grad-CAM heatmaps for every analysis</li>
+            <li><i class="bi bi-check2-circle"></i>Role-based access and a full audit trail</li>
+          </ul>
+        </div>
+        <span class="illus-tag align-self-start" style="position:relative;z-index:1"><i class="bi bi-palette"></i> Illustration</span>
+        <img class="eye" src="{{ url_for('static', filename='images/eye-hero.webp') }}" alt="" aria-hidden="true">
+      </div>
+      <div class="auth-main">
+        <h1 class="mb-1">Sign in</h1>
+        <p class="text-secondary small mb-4">Authorised clinical and screening staff only.</p>
+        <form method="post" novalidate>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="mb-3"><label class="form-label" for="username">Username</label>
+            <div class="input-icon"><i class="bi bi-person"></i><input class="form-control form-control-lg" id="username" name="username" autocomplete="username" required autofocus></div></div>
+          <div class="mb-3"><label class="form-label" for="password">Password</label>
+            <div class="input-icon"><i class="bi bi-lock"></i><input class="form-control form-control-lg" id="password" name="password" type="password" autocomplete="current-password" required></div></div>
+          <button class="btn btn-teal btn-lg w-100 mt-1" type="submit">Sign in <i class="bi bi-arrow-right"></i></button>
+        </form>
+        <p class="small text-center mt-3 mb-0">No account? <a href="{{ url_for('register') }}">Request access</a></p>
+        <div class="demo-box mt-4">
+          <div class="fw-semibold mb-1"><i class="bi bi-key me-1"></i>Local demo accounts</div>
+          <div class="text-secondary">Usernames <code>doctor</code>, <code>staff</code>, <code>admin</code>. The password is set by
+            <code>RETINAASSIST_DEMO_PASSWORD</code> (see README; local default <code>RetinaDemo2026!</code>). Change it before any shared use.</div>
+        </div>
+        <p class="small text-muted mt-3 mb-0"><i class="bi bi-shield-exclamation me-1"></i>Research prototype — not for clinical use.</p>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

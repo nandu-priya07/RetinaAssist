@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Request access{% endblock %}
+{% block content %}
+<section class="auth-wrap">
+  <div class="container">
+    <div class="auth-shell">
+      <div class="auth-side">
+        <div style="position:relative;z-index:1">
+          <div class="brand text-white"><span class="brand-mark"><i class="bi bi-eye"></i></span> <span>Retina<span class="ai">Assist</span></span></div>
+          <h2 class="mt-4 mb-2">Controlled access for screening teams.</h2>
+          <p class="small mb-0" style="max-width:270px">Requests are reviewed by an administrator before any account can sign in.</p>
+          <ul>
+            <li><i class="bi bi-1-circle"></i>Submit your request</li>
+            <li><i class="bi bi-2-circle"></i>An administrator approves it and assigns a role</li>
+            <li><i class="bi bi-3-circle"></i>Sign in with your username and password</li>
+          </ul>
+        </div>
+        <span class="illus-tag align-self-start" style="position:relative;z-index:1"><i class="bi bi-palette"></i> Illustration</span>
+        <img class="eye" src="{{ url_for('static', filename='images/eye-hero.webp') }}" alt="" aria-hidden="true">
+      </div>
+      <div class="auth-main">
+        <h1 class="mb-1">Request access</h1>
+        <p class="text-secondary small mb-4">New accounts are created as <strong>inactive screening-staff</strong> accounts until an administrator approves them.</p>
+        <form method="post" novalidate>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="row g-3">
+            <div class="col-md-6"><label class="form-label" for="full_name">Full name</label>
+              <input class="form-control" id="full_name" name="full_name" required maxlength="80" value="{{ form.get('full_name', '') }}"></div>
+            <div class="col-md-6"><label class="form-label" for="username">Username</label>
+              <input class="form-control" id="username" name="username" required pattern="[a-z0-9_.]{3,30}" value="{{ form.get('username', '') }}">
+              <div class="form-text">Lowercase letters, digits, dot or underscore.</div></div>
+            <div class="col-12"><label class="form-label" for="email">Work email <span class="text-muted fw-normal">(optional)</span></label>
+              <input class="form-control" id="email" name="email" type="email" value="{{ form.get('email', '') }}"></div>
+            <div class="col-md-6"><label class="form-label" for="password">Password</label>
+              <input class="form-control" id="password" name="password" type="password" autocomplete="new-password" required minlength="8">
+              <div class="form-text">8+ characters with letters and numbers.</div></div>
+            <div class="col-md-6"><label class="form-label" for="confirm">Confirm password</label>
+              <input class="form-control" id="confirm" name="confirm" type="password" autocomplete="new-password" required></div>
+          </div>
+          <button class="btn btn-teal btn-lg w-100 mt-4" type="submit">Submit request</button>
+        </form>
+        <p class="small text-center mt-3 mb-0">Already approved? <a href="{{ url_for('login') }}">Sign in</a></p>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

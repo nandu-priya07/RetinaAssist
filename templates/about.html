@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+{% block title %}About &amp; model{% endblock %}
+{% block content %}
+<style>
+  /* About page only */
+  .ab-grid { display: grid; gap: 1rem; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  @media (max-width: 991.98px) { .ab-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 575.98px) { .ab-grid { grid-template-columns: 1fr; } }
+  .ab-card { position: relative; background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.15rem 1.15rem 1rem; box-shadow: var(--shadow);
+    transition: transform .25s var(--ease), box-shadow .25s var(--ease), border-color .25s; height: 100%; }
+  .ab-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: #d3dde7; }
+  .ab-card h3 { font-size: .92rem; margin: .7rem 0 .3rem; }
+  .ab-card p { font-size: .82rem; color: var(--ink-2); margin: 0; }
+  .ab-chip { display: inline-flex; align-items: center; gap: .3rem; margin-top: .7rem; font-size: .68rem; font-weight: 600; color: var(--teal-dark);
+    background: var(--teal-softer); border: 1px solid #d0eaea; padding: .12rem .5rem; border-radius: 999px; }
+  .ab-grades { display: flex; flex-wrap: wrap; gap: .25rem; margin-top: .6rem; }
+  .ab-grades .grade-pill { font-size: .66rem; padding: .12rem .42rem; }
+
+  .flow { list-style: none; padding: 0; margin: 0; display: grid; gap: .75rem; grid-template-columns: repeat(6, minmax(0, 1fr)); counter-reset: flow; }
+  .flow li { position: relative; text-align: center; background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1rem .7rem .9rem; box-shadow: var(--shadow); counter-increment: flow; }
+  .flow li:not(:last-child)::after { content: "\F285"; font-family: "bootstrap-icons"; position: absolute; right: -.68rem; top: 50%; transform: translateY(-50%);
+    width: 1.1rem; height: 1.1rem; display: grid; place-items: center; font-size: .62rem; color: var(--teal); background: #fff; border: 1px solid var(--border); border-radius: 50%; z-index: 1; }
+  .flow .fi { width: 40px; height: 40px; margin: 0 auto .55rem; border-radius: 12px; display: grid; place-items: center; font-size: 1.05rem; color: #fff;
+    background: radial-gradient(circle at 30% 25%, #2fd0d2, var(--teal) 45%, var(--navy-3)); box-shadow: 0 8px 18px -8px rgba(15, 139, 141, .6); }
+  .flow .step { font-size: .62rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .flow strong { display: block; font-size: .82rem; color: var(--navy); margin: .15rem 0 .2rem; line-height: 1.3; }
+  .flow span.d { display: block; font-size: .72rem; color: var(--ink-2); line-height: 1.4; }
+  @media (max-width: 991.98px) { .flow { grid-template-columns: repeat(3, minmax(0, 1fr)); } .flow li:nth-child(3n)::after { display: none; } }
+  @media (max-width: 575.98px) {
+    .flow { grid-template-columns: 1fr; gap: .55rem; }
+    .flow li { display: grid; grid-template-columns: 40px 1fr; gap: .2rem .8rem; text-align: left; align-items: center; padding: .75rem .85rem; }
+    .flow .fi { grid-row: span 3; margin: 0; }
+    .flow li:not(:last-child)::after { content: "\F282"; right: auto; left: 1.55rem; top: auto; bottom: -.72rem; transform: none; display: grid; }
+  }
+
+  .tech { display: grid; gap: .75rem; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .tech .ab-card { padding: 1rem; }
+  .tech .k { font-size: .66rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); margin-top: .7rem; }
+  .tech .v { font-size: .9rem; font-weight: 700; color: var(--navy); letter-spacing: -.01em; line-height: 1.3; }
+  .tech p { margin-top: .3rem; font-size: .76rem; }
+  @media (max-width: 1199.98px) { .tech { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (max-width: 575.98px) { .tech { grid-template-columns: 1fr; } }
+
+  .rai { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); }
+  .rai .ab-card { border-top: 3px solid var(--teal); }
+  .rai .ab-card.warn { border-top-color: #c08a1e; }
+  .rai .ri { font-size: 1.25rem; color: var(--teal); }
+  .rai .warn .ri { color: #a86400; }
+
+  .model-details { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-xs); }
+  .model-details summary { list-style: none; cursor: pointer; padding: .8rem 1rem; display: flex; align-items: center; gap: .6rem; font-size: .84rem; font-weight: 600; color: var(--navy); }
+  .model-details summary::-webkit-details-marker { display: none; }
+  .model-details summary .chev { margin-left: auto; color: var(--muted); transition: transform .2s; }
+  .model-details[open] summary .chev { transform: rotate(180deg); }
+  .model-details .body { padding: 0 1rem 1rem; font-size: .8rem; }
+</style>
+
+<section class="page-hero">
+  <div class="container position-relative">
+    <div class="row align-items-center g-4">
+      <div class="col-lg-8">
+        <span class="eyebrow"><span class="dot"></span> About the research</span>
+        <h1>Why RetinaAssist?</h1>
+        <p class="lead mb-0">Diabetic retinopathy is a leading cause of preventable vision loss. Screening programmes generate large volumes of retinal
+          images that specialists must review. RetinaAssist explores how explainable AI could help teams organise that review workload — without replacing clinical judgement.</p>
+      </div>
+      <div class="col-lg-4 d-none d-lg-block">
+        <div class="showcase" style="max-width:260px;margin-left:auto;padding:.9rem">
+          <span class="illus-tag"><i class="bi bi-palette"></i> Illustration</span>
+          <img src="{{ url_for('static', filename='images/retina-illustration.webp') }}" alt="Illustrative drawing of a retina" width="900" height="900">
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Project highlights -->
+<section class="section-sm pt-4">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow"><span class="dot"></span> Project highlights</span>
+      <h2>What the prototype does today</h2>
+      <p>Every capability below is implemented in this application and can be explored after signing in.</p>
+    </div>
+    <div class="ab-grid">
+      <div class="ab-card">
+        <div class="feature-icon"><i class="bi bi-layers"></i></div>
+        <h3>Five-grade classification</h3>
+        <p>Each fundus image receives a predicted diabetic retinopathy grade.</p>
+        <div class="ab-grades">{% for n in ['No DR', 'Mild', 'Moderate', 'Severe', 'Proliferative'] %}<span class="grade-pill g{{ loop.index0 }}">{{ n }}</span>{% endfor %}</div>
+      </div>
+      <div class="ab-card">
+        <div class="feature-icon"><i class="bi bi-fire"></i></div>
+        <h3>Explainable AI</h3>
+        <p>Grad-CAM heatmaps and overlays visualise the image regions that influenced the model's output.</p>
+        <span class="ab-chip"><i class="bi bi-eye"></i> Explainable Retina Lens</span>
+      </div>
+      <div class="ab-card">
+        <div class="feature-icon"><i class="bi bi-camera"></i></div>
+        <h3>Image-quality checks</h3>
+        <p>Technical checks for near-empty, very dark or very bright images, with transparent review flags that state their reason.</p>
+        <span class="ab-chip"><i class="bi bi-flag"></i> Priority &amp; uncertainty flags</span>
+      </div>
+      <div class="ab-card">
+        <div class="feature-icon"><i class="bi bi-person-check"></i></div>
+        <h3>Clinician-in-the-loop review</h3>
+        <p>Ophthalmologists review each case, record agreement or disagreement with the AI output, and add clinical notes.</p>
+        <span class="ab-chip"><i class="bi bi-clipboard2-check"></i> Review workflow</span>
+      </div>
+      <div class="ab-card">
+        <div class="feature-icon"><i class="bi bi-folder2-open"></i></div>
+        <h3>Screening records &amp; reports</h3>
+        <p>Searchable, filterable case history and downloadable PDF reports generated from each stored case.</p>
+        <span class="ab-chip"><i class="bi bi-file-earmark-pdf"></i> PDF export</span>
+      </div>
+      <div class="ab-card">
+        <div class="feature-icon"><i class="bi bi-shield-lock"></i></div>
+        <h3>Access control &amp; accountability</h3>
+        <p>Role-based permissions for staff, ophthalmologists and administrators, with an append-only audit trail.</p>
+        <span class="ab-chip"><i class="bi bi-journal-check"></i> Audit trail</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How it works -->
+<section class="section-sm section-soft">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow"><span class="dot"></span> How RetinaAssist works</span>
+      <h2>From image upload to clinician decision</h2>
+    </div>
+    <ol class="flow">
+      <li><div class="fi"><i class="bi bi-cloud-arrow-up"></i></div><span class="step">Step 1</span><strong>Retinal image upload</strong><span class="d">Synthetic patient code and fundus photograph</span></li>
+      <li><div class="fi"><i class="bi bi-check2-square"></i></div><span class="step">Step 2</span><strong>Image validation</strong><span class="d">File checks and preliminary quality checks</span></li>
+      <li><div class="fi"><i class="bi bi-cpu"></i></div><span class="step">Step 3</span><strong>EfficientNetB0 inference</strong><span class="d">Fine-tuned model scores all five grades</span></li>
+      <li><div class="fi"><i class="bi bi-fire"></i></div><span class="step">Step 4</span><strong>Scores &amp; Grad-CAM</strong><span class="d">Class scores with heatmap and overlay</span></li>
+      <li><div class="fi"><i class="bi bi-sort-up"></i></div><span class="step">Step 5</span><strong>Review prioritisation</strong><span class="d">Transparent, configurable flags</span></li>
+      <li><div class="fi"><i class="bi bi-person-check"></i></div><span class="step">Step 6</span><strong>Clinician review &amp; report</strong><span class="d">Decision, notes and PDF report</span></li>
+    </ol>
+  </div>
+</section>
+
+<!-- Technical highlights -->
+<section class="section-sm">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow"><span class="dot"></span> Technical highlights</span>
+      <h2>Under the hood</h2>
+    </div>
+    <div class="tech">
+      <div class="ab-card"><div class="feature-icon"><i class="bi bi-cpu"></i></div><div class="k">Model</div><div class="v">Fine-tuned EfficientNetB0</div><p>Transfer learning on APTOS 2019; 224×224 RGB input.</p></div>
+      <div class="ab-card"><div class="feature-icon"><i class="bi bi-diagram-2"></i></div><div class="k">Output</div><div class="v">Five DR classes</div><p>No DR, Mild, Moderate, Severe and Proliferative DR.</p></div>
+      <div class="ab-card"><div class="feature-icon"><i class="bi bi-fire"></i></div><div class="k">Explainability</div><div class="v">Grad-CAM</div><p>Computed on the backbone's final convolutional layer.</p></div>
+      <div class="ab-card"><div class="feature-icon"><i class="bi bi-hdd-stack"></i></div><div class="k">Application</div><div class="v">Flask + SQLite</div><p>Server-side roles, sessions and local case storage.</p></div>
+      <div class="ab-card"><div class="feature-icon"><i class="bi bi-file-earmark-pdf"></i></div><div class="k">Governance</div><div class="v">PDF reports &amp; audit log</div><p>ReportLab PDFs and an append-only event log.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- Insights & responsible AI -->
+<section class="section-sm section-soft">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow"><span class="dot"></span> Insights &amp; responsible AI</span>
+      <h2>How to read the results</h2>
+    </div>
+    <div class="rai">
+      <div class="ab-card"><i class="bi bi-bar-chart-steps ri"></i><h3>All five scores, every time</h3><p>Each prediction shows scores for all five classes, so close calls are visible — not just the top grade.</p></div>
+      <div class="ab-card"><i class="bi bi-fire ri"></i><h3>Influence, not proof</h3><p>Grad-CAM highlights regions that influenced the model output. It does not confirm lesions.</p></div>
+      <div class="ab-card"><i class="bi bi-flag ri"></i><h3>Flags draw attention</h3><p>Image-quality and uncertainty flags help identify cases that may need a closer look.</p></div>
+      <div class="ab-card"><i class="bi bi-person-badge ri"></i><h3>Clinicians decide</h3><p>Clinicians remain responsible for reviewing findings and making every decision.</p></div>
+      <div class="ab-card warn"><i class="bi bi-shield-exclamation ri"></i><h3>Research prototype</h3><p>The model has not been clinically validated and is not approved for diagnostic use.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- Compact model information -->
+<section class="section-sm">
+  <div class="container" style="max-width: 820px">
+    <details class="model-details" id="model">
+      <summary><i class="bi bi-info-circle text-teal"></i> Research model details <span class="small text-muted fw-normal d-none d-sm-inline">— offline validation figures</span><i class="bi bi-chevron-down chev"></i></summary>
+      <div class="body">
+        <p class="text-secondary mb-2">Offline results from the Google Colab evaluation on a held-out split of the {{ metrics.dataset }} during model development.
+          They are not measured by this application, are not live performance monitoring, and are not clinical validation.</p>
+        <div class="table-responsive border rounded-3">
+          <table class="table table-sm align-middle mb-0">
+            <thead><tr><th>Model</th><th class="text-end">Accuracy</th><th class="text-end">Macro F1</th></tr></thead>
+            <tbody>
+            {% for m in metrics.comparison %}
+              <tr><td>{{ m.name }}{% if m.in_use %} <span class="badge text-bg-teal ms-1">in use</span>{% endif %}</td>
+                <td class="text-end tabular">{{ '%.1f%%' % (m.accuracy * 100) if m.accuracy is not none else '—' }}</td>
+                <td class="text-end tabular">{{ '%.3f' % m.macro_f1 }}</td></tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <p class="text-secondary mt-2 mb-0">The class-weighted MobileNetV2 reached a higher macro F1, so the model in use is not the best on every metric.</p>
+      </div>
+    </details>
+  </div>
+</section>
+{% endblock %}

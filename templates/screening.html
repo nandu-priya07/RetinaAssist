@@ -1,0 +1,95 @@
+{% extends "app_base.html" %}
+{% block title %}New screening{% endblock %}
+{% block page_title %}New screening{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>New screening</h1>
+    <p>Upload a retinal fundus photograph for AI-assisted analysis and Grad-CAM explanation.</p>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-xl-8">
+    <div class="panel">
+      <form method="post" enctype="multipart/form-data" id="screeningForm" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="settings-section">
+          <h3><i class="bi bi-person-vcard me-1"></i>1 · Screening details</h3>
+          <label class="form-label" for="patient_code">Synthetic patient code</label>
+          <div class="input-icon" style="max-width: 360px">
+            <i class="bi bi-hash"></i>
+            <input class="form-control" id="patient_code" name="patient_code" required pattern="[A-Za-z0-9\-]{3,20}"
+                   placeholder="e.g. SYN-0001" value="{{ patient_code }}" maxlength="20" aria-describedby="patientHelp">
+            <div class="invalid-feedback">Use 3–20 letters, digits or hyphens.</div>
+          </div>
+          <div class="form-text" id="patientHelp">3–20 letters, digits or hyphens. <strong>Never enter real patient names or identifiers.</strong></div>
+        </div>
+
+        <div class="settings-section">
+          <h3><i class="bi bi-image me-1"></i>2 · Fundus image</h3>
+          <div class="dropzone" id="dropzone">
+            <input type="file" id="image" name="image" accept=".png,.jpg,.jpeg,image/png,image/jpeg" required aria-label="Choose a fundus image" aria-describedby="fileError">
+            <div class="dz-empty" id="dzEmpty">
+              <div class="dz-icon"><i class="bi bi-cloud-arrow-up"></i></div>
+              <div class="dz-title">Drag &amp; drop a fundus image</div>
+              <div class="small text-muted mt-1">or <span class="dz-browse">browse your files</span></div>
+              <div class="dz-formats"><span>PNG</span><span>JPEG</span><span>Up to 10 MB</span><span>Min 128×128 px</span></div>
+            </div>
+            <div class="dz-preview d-none" id="dzPreview">
+              <div class="preview-frame"><img id="previewImg" alt="Selected fundus image preview"></div>
+              <div>
+                <div class="small text-muted mb-1"><i class="bi bi-check-circle-fill text-teal me-1"></i>Ready for analysis</div>
+                <div class="file-name" id="fileName"></div>
+                <div class="file-meta" id="fileMeta"></div>
+                <div class="dz-actions">
+                  <button type="button" class="btn btn-sm btn-outline-secondary" id="removeFile"><i class="bi bi-x-lg"></i> Remove</button>
+                  <span class="small text-muted align-self-center">Click or drop another image to replace it.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="invalid-feedback d-block" id="fileError" role="alert"></div>
+        </div>
+
+        <div class="settings-section d-flex flex-wrap align-items-center gap-3">
+          <button class="btn btn-teal btn-lg" type="submit" id="analyseBtn">
+            <span class="btn-label"><i class="bi bi-cpu"></i> Run AI analysis</span>
+            <span class="btn-loading d-none"><span class="spinner-border spinner-border-sm me-2"></span>Analysing image — this takes a few seconds…</span>
+          </button>
+          <span class="small text-muted"><i class="bi bi-shield-check me-1"></i>The result enters the clinician review queue.</span>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="col-xl-4">
+    <div class="panel mb-3">
+      <div class="panel-head"><h2 class="mb-0"><i class="bi bi-camera"></i>Image guidance</h2><span class="illus-tag"><i class="bi bi-palette"></i> Illustration</span></div>
+      <div class="panel-body guide-card">
+        <div class="art"><img src="{{ url_for('static', filename='images/retina-illustration.webp') }}" alt="Illustrative drawing of a retina, not a patient image"></div>
+        <ul>
+          <li><i class="bi bi-check2"></i>Centred fundus photograph</li>
+          <li><i class="bi bi-check2"></i>Optic disc and macula visible</li>
+          <li><i class="bi bi-check2"></i>Even lighting, in focus</li>
+          <li><i class="bi bi-x-lg text-danger"></i>No screenshots or edited images</li>
+        </ul>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2 class="mb-0"><i class="bi bi-diagram-3"></i>What happens next</h2></div>
+      <div class="panel-body">
+        <ol class="steps">
+          <li><strong>File validation</strong><span>Type, size, dimensions and successful decoding.</span></li>
+          <li><strong>Preliminary image checks</strong><span>Near-empty, extremely dark or bright, low edge detail. Simple heuristics, not a validated quality model.</span></li>
+          <li><strong>Model analysis</strong><span>Scores for all five DR grades from the fine-tuned EfficientNetB0 model.</span></li>
+          <li><strong>Grad-CAM</strong><span>Heatmap and overlay of regions that influenced the model.</span></li>
+          <li><strong>Review rules</strong><span>Transparent flags and operational priority for the review queue.</span></li>
+        </ol>
+      </div>
+    </div>
+    <div class="alert alert-warning small mt-4 mb-0 d-flex gap-2"><i class="bi bi-shield-exclamation fs-6"></i>
+      <div>AI-assisted screening support only. Every result must be reviewed by a qualified clinician.</div></div>
+  </div>
+</div>
+{% endblock %}

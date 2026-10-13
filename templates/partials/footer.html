@@ -1,0 +1,29 @@
+<footer class="site-footer">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-md-5">
+        <div class="brand text-white mb-2"><span class="brand-mark"><i class="bi bi-eye"></i></span> <span>Retina<span class="ai">Assist</span></span></div>
+        <p class="mb-0" style="max-width: 360px">Explainable AI for retinal screening and clinical decision support — a research prototype built on the APTOS 2019 dataset.</p>
+      </div>
+      <div class="col-6 col-md-3">
+        <h6>Platform</h6>
+        <ul class="list-unstyled mb-0">
+          <li><a href="{{ url_for('about') }}">About &amp; model</a></li>
+          <li><a href="{{ url_for('login') }}">Sign in</a></li>
+          <li><a href="{{ url_for('register') }}">Request access</a></li>
+          <li><a href="{{ url_for('contact') }}">Contact</a></li>
+        </ul>
+      </div>
+      <div class="col-6 col-md-4">
+        <h6>Important</h6>
+        <p class="mb-0">Research prototype only. Not a clinically validated medical device and not approved for diagnostic use.
+          All outputs require review by a qualified clinician. Synthetic data only.</p>
+      </div>
+    </div>
+    <hr>
+    <div class="d-flex flex-wrap justify-content-between gap-2 small">
+      <span>&copy; RetinaAssist research prototype · academic demonstration</span>
+      <span>Artwork on public pages is illustrative and not patient data.</span>
+    </div>
+  </div>
+</footer>

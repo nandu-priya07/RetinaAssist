@@ -1,0 +1,60 @@
+{% extends "app_base.html" %}
+{% from "partials/macros.html" import hbar_chart with context %}
+{% block title %}Analytics{% endblock %}
+{% block page_title %}Analytics{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1>Hospital analytics</h1><p>Operational statistics calculated from screening records stored in this application.</p></div>
+  <div class="actions"><a class="btn btn-outline-navy" href="{{ url_for('records') }}"><i class="bi bi-folder2-open"></i> Case records</a></div>
+</div>
+
+{% if total == 0 %}
+<div class="panel"><div class="empty-state"><i class="bi bi-bar-chart-line"></i><p class="fw-semibold mb-1">No screening data yet</p>
+  <p class="small text-muted mb-0">Charts will appear once screenings have been recorded.</p></div></div>
+{% else %}
+<div class="row g-3 mb-4">
+  {% set awaiting = (status_rows[0][1] + status_rows[1][1]) %}
+  {% for label, value, icon, accent in [('Total screenings', total, 'bi-images', 'accent-navy'), ('Awaiting review', awaiting, 'bi-hourglass-split', 'accent-teal'),
+       ('Uncertain outputs (flagged)', uncertain, 'bi-question-circle', 'accent-amber'), ('Image check failures', quality_rows[2][1], 'bi-camera', 'accent-red')] %}
+  <div class="col-6 col-xl-3"><div class="stat-card {{ accent }}"><div class="stat-icon"><i class="bi {{ icon }}"></i></div>
+    <div><div class="stat-value">{{ value }}</div><div class="stat-label">{{ label }}</div></div></div></div>
+  {% endfor %}
+</div>
+
+<div class="row g-4">
+  <div class="col-12">
+    <div class="panel">
+      <div class="panel-head"><h2 class="mb-0"><i class="bi bi-graph-up"></i>Screenings per day</h2><span class="small text-muted">Last 14 days</span></div>
+      {% set tmax = (trend | map(attribute='count') | max) or 1 %}
+      <div class="panel-body">
+        <div class="vbar-scroll">
+          <div class="vbar-chart" role="table" aria-label="Screenings per day, last 14 days">
+            {% for d in trend %}
+            <div class="vbar-col" role="row" title="{{ d.label }}: {{ d.count }} screening{{ '' if d.count == 1 else 's' }}">
+              <div class="vbar-value" role="cell">{{ d.count if d.count else '' }}</div>
+              <div class="vbar-track"><div class="vbar-fill" style="height: {{ (d.count / tmax * 100) | round(1) }}%"></div></div>
+              <div class="vbar-label" role="cell">{{ d.label }}</div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        <p class="chart-note">Total in period: {{ trend | sum(attribute='count') }} · busiest day: {{ tmax if tmax > 0 else 0 }} screening{{ '' if tmax == 1 else 's' }}.</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6"><div class="panel h-100"><div class="panel-head"><h2 class="mb-0"><i class="bi bi-bar-chart-steps"></i>Model grade distribution</h2></div>
+    <div class="panel-body">{{ hbar_chart(grade_rows) }}<p class="chart-note">Counts of model outputs, not confirmed diagnoses.</p></div></div></div>
+  <div class="col-lg-6"><div class="panel h-100"><div class="panel-head"><h2 class="mb-0"><i class="bi bi-clipboard2-check"></i>Cases by review status</h2></div>
+    <div class="panel-body">{{ hbar_chart(status_rows) }}</div></div></div>
+  <div class="col-lg-4"><div class="panel h-100"><div class="panel-head"><h2 class="mb-0"><i class="bi bi-camera"></i>Preliminary image checks</h2></div>
+    <div class="panel-body">{{ hbar_chart(quality_rows) }}<p class="chart-note">Simple heuristics, not a validated quality model.</p></div></div></div>
+  <div class="col-lg-4"><div class="panel h-100"><div class="panel-head"><h2 class="mb-0"><i class="bi bi-sort-up"></i>Operational priority</h2></div>
+    <div class="panel-body">{{ hbar_chart(priority_rows) }}<p class="chart-note">Review order, not medical severity.</p></div></div></div>
+  <div class="col-lg-4"><div class="panel h-100"><div class="panel-head"><h2 class="mb-0"><i class="bi bi-person-check"></i>Clinician assessment of AI output</h2></div>
+    <div class="panel-body">{{ hbar_chart(assessment_rows) }}<p class="chart-note">Agreement records are not a measure of model accuracy.</p></div></div></div>
+</div>
+{% endif %}
+
+<p class="small text-muted mt-4 mb-0"><i class="bi bi-info-circle me-1"></i>These figures describe screening activity in this application only. The application does not monitor model performance;
+  research-model validation results are documented on the <a href="{{ url_for('about') }}">About</a> page.</p>
+{% endblock %}

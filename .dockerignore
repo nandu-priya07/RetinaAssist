@@ -1,0 +1,9 @@
+.git
+.venv
+venv
+instance
+__pycache__
+*.pyc
+.env
+*.log
+tools/assets

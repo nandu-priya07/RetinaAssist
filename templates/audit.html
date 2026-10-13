@@ -1,0 +1,37 @@
+{% extends "app_base.html" %}
+{% block title %}Audit trail{% endblock %}
+{% block page_title %}Audit trail{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1>Audit trail</h1><p>Append-only event log. Edits and deletions are blocked at the database level. Showing the latest 300 events.</p></div>
+</div>
+<form class="filter-bar" method="get">
+  <div class="row g-2 align-items-end">
+    <div class="col-md-4"><label class="form-label small" for="event">Event type</label>
+      <select class="form-select" id="event" name="event"><option value="">All events</option>
+        {% for t in types %}<option value="{{ t }}" {{ 'selected' if filters.get('event') == t }}>{{ t }}</option>{% endfor %}</select></div>
+    <div class="col-md-4"><label class="form-label small" for="case">Case ID</label>
+      <input class="form-control" id="case" name="case" value="{{ filters.get('case', '') }}" placeholder="RA-…"></div>
+    <div class="col-md-4 d-flex gap-2"><button class="btn btn-navy flex-fill" type="submit"><i class="bi bi-funnel"></i> Filter</button>
+      <a class="btn btn-outline-secondary" href="{{ url_for('audit') }}">Clear</a></div>
+  </div>
+</form>
+<div class="panel">
+  {% if events %}
+  <div class="table-responsive">
+    <table class="table table-sm align-middle mb-0">
+      <thead><tr><th>#</th><th>Time</th><th>User</th><th>Event</th><th>Case</th><th>Details</th></tr></thead>
+      <tbody>
+      {% for e in events %}
+      <tr><td class="text-muted small">{{ e.id }}</td><td class="small text-nowrap">{{ e.created_at }}</td>
+        <td class="small">{{ e.username or '—' }}{% if e.user_id %} <span class="text-muted">(#{{ e.user_id }})</span>{% endif %}</td>
+        <td><code class="small">{{ e.event_type }}</code></td>
+        <td class="small">{% if e.case_code %}<a href="{{ url_for('analysis', case_code=e.case_code) }}">{{ e.case_code }}</a>{% endif %}</td>
+        <td class="small text-muted text-break">{{ e.details or '' }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}<div class="empty-state"><i class="bi bi-shield-check"></i><p class="small mb-0">No events match.</p></div>{% endif %}
+</div>
+{% endblock %}

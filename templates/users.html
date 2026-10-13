@@ -1,0 +1,68 @@
+{% extends "app_base.html" %}
+{% block title %}Users &amp; access{% endblock %}
+{% block page_title %}Users &amp; access{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1>Users &amp; access</h1><p>Approve access requests, assign roles and create accounts. All changes are audited.</p></div>
+</div>
+<div class="row g-4">
+  <div class="col-xl-8">
+    <div class="panel">
+      <div class="panel-head"><h2 class="mb-0"><i class="bi bi-people"></i>Accounts</h2></div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead><tr><th>User</th><th>Role</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+          {% for u in users %}
+          <tr>
+            <td><div class="fw-semibold">{{ u.full_name }}</div><div class="small text-muted">{{ u.username }}{% if u.email %} · {{ u.email }}{% endif %}</div></td>
+            <td colspan="3">
+              <form method="post" class="d-flex flex-wrap gap-2 align-items-center m-0">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="update"><input type="hidden" name="user_id" value="{{ u.id }}">
+                <select class="form-select form-select-sm w-auto" name="role" aria-label="Role for {{ u.username }}">
+                  {% for k, v in ROLE_LABELS.items() %}<option value="{{ k }}" {{ 'selected' if u.role == k }}>{{ v }}</option>{% endfor %}
+                </select>
+                <select class="form-select form-select-sm w-auto" name="is_active" aria-label="Status for {{ u.username }}">
+                  <option value="1" {{ 'selected' if u.is_active }}>Active</option>
+                  <option value="0" {{ 'selected' if not u.is_active }}>{{ 'Pending / inactive' }}</option>
+                </select>
+                {% if not u.is_active %}<span class="badge-soft q-warning">Awaiting approval</span>{% endif %}
+                <button class="btn btn-sm btn-outline-navy ms-auto" type="submit">Save</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="panel mt-4">
+      <div class="panel-head"><h2 class="mb-0"><i class="bi bi-envelope"></i>Contact messages (local demo)</h2></div>
+      {% if messages %}
+      <ul class="list-group list-group-flush">
+        {% for m in messages %}<li class="list-group-item"><div class="small fw-semibold">{{ m.name }} · {{ m.email }}{% if m.organisation %} · {{ m.organisation }}{% endif %}</div>
+          <div class="small text-muted">{{ m.created_at }}</div><div class="small mt-1">{{ m.message }}</div></li>{% endfor %}
+      </ul>
+      {% else %}<div class="empty-state py-4"><i class="bi bi-envelope"></i><p class="small mb-0">No messages.</p></div>{% endif %}
+    </div>
+  </div>
+  <div class="col-xl-4">
+    <div class="panel">
+      <div class="panel-head"><h2 class="mb-0"><i class="bi bi-person-plus"></i>Create account</h2></div>
+      <div class="settings-section">
+      <form method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="create">
+        <div class="mb-2"><label class="form-label small" for="full_name">Full name</label><input class="form-control" id="full_name" name="full_name" required></div>
+        <div class="mb-2"><label class="form-label small" for="username">Username</label><input class="form-control" id="username" name="username" required></div>
+        <div class="mb-2"><label class="form-label small" for="email">Email</label><input class="form-control" id="email" name="email" type="email"></div>
+        <div class="mb-2"><label class="form-label small" for="role">Role</label>
+          <select class="form-select" id="role" name="role">{% for k, v in ROLE_LABELS.items() %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></div>
+        <div class="mb-3"><label class="form-label small" for="password">Initial password</label><input class="form-control" id="password" name="password" type="password" autocomplete="new-password" required minlength="8">
+          <div class="form-text">At least 8 characters with letters and numbers.</div></div>
+        <button class="btn btn-teal w-100" type="submit"><i class="bi bi-person-plus"></i> Create account</button>
+      </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

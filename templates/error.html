@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<section class="error-wrap">
+  <div class="container">
+    <div class="error-code">{{ code }}</div>
+    <h1 class="h4 fw-bold mt-2">{{ title }}</h1>
+    <p class="text-secondary">{% if code == 403 %}Your role does not have permission to view this page.{% elif code == 404 %}The page or case you requested does not exist.{% else %}{{ description }}{% endif %}</p>
+    <a class="btn btn-teal" href="{{ url_for('dashboard') if current_user else url_for('index') }}"><i class="bi bi-arrow-left"></i> Go back</a>
+  </div>
+</section>
+{% endblock %}

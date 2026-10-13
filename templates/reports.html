@@ -1,0 +1,83 @@
+{% extends "app_base.html" %}
+{% from "partials/macros.html" import priority_badge, quality_badge, status_badge, grade_pill with context %}
+{% block title %}Reports{% endblock %}
+{% block page_title %}Reports{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1>Clinical screening reports</h1><p>PDF reports generated from each case's stored prediction, images, flags and review status.</p></div>
+</div>
+
+<div class="row g-4">
+  <div class="col-xl-5">
+    <div class="panel">
+      <div class="panel-head"><h2 class="mb-0"><i class="bi bi-eye"></i>Report preview</h2></div>
+      <div class="panel-body">
+      <form method="get" class="d-flex gap-2 mb-3">
+        <select class="form-select" name="case" aria-label="Select case" required>
+          <option value="">Select a case…</option>
+          {% for c in cases %}<option value="{{ c.case_code }}" {{ 'selected' if selected and selected.case_code == c.case_code }}>{{ c.case_code }} · {{ c.patient_code }} · {{ c.predicted_label }}</option>{% endfor %}
+        </select>
+        <button class="btn btn-navy" type="submit">Preview</button>
+      </form>
+      {% if selected %}
+      <div class="report-preview">
+        <div class="d-flex justify-content-between align-items-start">
+          <div><div class="brand text-navy"><span class="brand-mark sm"><i class="bi bi-eye"></i></span> RetinaAssist</div>
+            <div class="small text-teal">AI-assisted retinal screening report — research prototype</div></div>
+        </div>
+        <hr>
+        <dl class="row small mb-2">
+          <dt class="col-5">Case</dt><dd class="col-7">{{ selected.case_code }}</dd>
+          <dt class="col-5">Synthetic patient</dt><dd class="col-7">{{ selected.patient_code }}</dd>
+          <dt class="col-5">Screening date</dt><dd class="col-7">{{ selected.screened_at }}</dd>
+          <dt class="col-5">Review status</dt><dd class="col-7">{{ REVIEW_STATUSES[selected.review_status] }}</dd>
+          <dt class="col-5">Model output</dt><dd class="col-7">{{ selected.predicted_grade }} · {{ selected.predicted_label }} ({{ '%.1f' % (selected.top_score*100) }}%)</dd>
+          <dt class="col-5">Image checks</dt><dd class="col-7">{{ QUALITY_LABELS[selected.quality_status] }}</dd>
+          <dt class="col-5">Priority</dt><dd class="col-7">{{ PRIORITY_LABELS[selected.priority] }} ({{ selected.flags|length }} flag{{ '' if selected.flags|length == 1 else 's' }})</dd>
+        </dl>
+        <div class="row g-2">
+          <div class="col-6"><img class="img-fluid rounded" src="{{ url_for('media', case_code=selected.case_code, kind='original.png') }}" alt="Original"></div>
+          {% if selected.overlay_path %}<div class="col-6"><img class="img-fluid rounded" src="{{ url_for('media', case_code=selected.case_code, kind='overlay.png') }}" alt="Grad-CAM overlay"></div>{% endif %}
+        </div>
+        <p class="small text-muted mt-2 mb-0">The PDF also includes all five class scores, image-check details, flag reasons, clinician review and the full research disclaimer.</p>
+      </div>
+      <form method="post" action="{{ url_for('generate_report', case_code=selected.case_code) }}" class="mt-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-teal w-100" type="submit"><i class="bi bi-file-earmark-pdf"></i> Generate &amp; download PDF</button>
+      </form>
+      {% elif not cases %}
+      <div class="empty-state py-4"><i class="bi bi-file-earmark"></i><p class="small mb-0">No cases yet. Create a screening first.</p></div>
+      {% else %}
+      <div class="empty-state py-4"><i class="bi bi-file-earmark-text"></i><p class="fw-semibold mb-1">Select a case to preview</p><p class="small text-muted mb-0">Choose a case above to see what its PDF report will contain.</p></div>
+      {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-7">
+    <div class="panel">
+      <div class="panel-head"><h2 class="mb-0"><i class="bi bi-clock-history"></i>Report history</h2><span class="small text-muted">{{ history|length }} report{{ '' if history|length == 1 else 's' }}</span></div>
+      {% if history %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead><tr><th>Generated</th><th>Case</th><th>Patient</th><th>Model output</th><th>By</th><th></th></tr></thead>
+          <tbody>
+          {% for r in history %}
+          <tr>
+            <td class="small text-nowrap">{{ r.generated_at }}</td>
+            <td><a href="{{ url_for('analysis', case_code=r.case_code) }}">{{ r.case_code }}</a></td>
+            <td>{{ r.patient_code }}</td>
+            <td class="small wrap">{{ r.predicted_label }}</td>
+            <td class="small wrap" style="min-width:120px">{{ r.full_name }}</td>
+            <td class="text-end"><a class="btn btn-sm btn-outline-navy" href="{{ url_for('download_report', report_id=r.id) }}"><i class="bi bi-download"></i> PDF</a></td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state"><i class="bi bi-file-earmark-medical"></i><p class="fw-semibold mb-1">No reports generated yet</p><p class="small text-muted mb-0">Select a case to preview and export its report.</p></div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

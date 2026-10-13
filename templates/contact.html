@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Contact{% endblock %}
+{% block content %}
+<section class="page-hero">
+  <div class="container">
+    <span class="eyebrow"><span class="dot"></span> Contact</span>
+    <h1>Get in touch</h1>
+    <p class="lead col-lg-7 mb-0">Questions about the research prototype, its evaluation, or a pilot discussion.</p>
+  </div>
+</section>
+<section class="section pt-4">
+  <div class="container">
+    <div class="row g-3 g-lg-4">
+      <div class="col-lg-7">
+        <div class="content-card">
+          <form method="post" novalidate>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="row g-3">
+              <div class="col-md-6"><label class="form-label" for="name">Name</label>
+                <input class="form-control" id="name" name="name" required maxlength="80" value="{{ form.get('name', '') }}"></div>
+              <div class="col-md-6"><label class="form-label" for="email">Email</label>
+                <input class="form-control" id="email" name="email" type="email" required maxlength="120" value="{{ form.get('email', '') }}"></div>
+              <div class="col-12"><label class="form-label" for="organisation">Organisation <span class="text-muted fw-normal">(optional)</span></label>
+                <input class="form-control" id="organisation" name="organisation" maxlength="120" value="{{ form.get('organisation', '') }}"></div>
+              <div class="col-12"><label class="form-label" for="message">Message</label>
+                <textarea class="form-control" id="message" name="message" rows="5" required minlength="10" maxlength="4000">{{ form.get('message', '') }}</textarea>
+                <div class="form-text">Please do not include any real patient information.</div></div>
+            </div>
+            <button class="btn btn-teal mt-3" type="submit"><i class="bi bi-send"></i> Send message</button>
+          </form>
+        </div>
+      </div>
+      <div class="col-lg-5">
+        <div class="content-card mb-3">
+          <div class="d-flex gap-3">
+            <div class="feature-icon flex-shrink-0"><i class="bi bi-hdd-stack"></i></div>
+            <div><h2 class="h6 mb-1">Local demo notice</h2>
+              <p class="small text-secondary mb-0">This prototype runs locally. Messages are stored in the local SQLite database and are visible to
+                administrators on the <em>Users &amp; access</em> page. No email is sent.</p></div>
+          </div>
+        </div>
+        <div class="content-card">
+          <div class="d-flex gap-3">
+            <div class="feature-icon flex-shrink-0"><i class="bi bi-envelope"></i></div>
+            <div><h2 class="h6 mb-1">Support</h2>
+              <p class="small text-secondary mb-0">support@retinaassist.local (demo address)<br>Academic project — responses are not guaranteed.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

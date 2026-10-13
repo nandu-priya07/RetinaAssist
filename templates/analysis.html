@@ -1,0 +1,199 @@
+{% extends "app_base.html" %}
+{% from "partials/macros.html" import priority_badge, quality_badge, status_badge, grade_pill with context %}
+{% block title %}Case {{ case.case_code }}{% endblock %}
+{% block page_title %}AI analysis{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <a href="{{ url_for('records') }}" class="back-link"><i class="bi bi-arrow-left"></i> Case records</a>
+    <h1>{{ case.case_code }}</h1>
+    <p class="small">Synthetic patient <strong>{{ case.patient_code }}</strong> · screened {{ case.screened_at }}</p>
+  </div>
+  <div class="actions">
+    {{ status_badge(case.review_status) }} {{ priority_badge(case.priority) }}
+    {% if current_user.role in ['doctor', 'admin'] %}
+    <form method="post" action="{{ url_for('generate_report', case_code=case.case_code) }}" class="m-0">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-teal" type="submit"><i class="bi bi-file-earmark-pdf"></i> Generate PDF report</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+
+<div class="alert alert-warning d-flex gap-2 small"><i class="bi bi-shield-exclamation fs-5"></i>
+  <div><strong>AI-assisted screening support — not a diagnosis.</strong> The grade and scores below are model outputs and must be reviewed
+    by a qualified clinician. Scores are not calibrated probabilities of disease.</div></div>
+
+<div class="row g-4">
+  <!-- Explainable Retina Lens -->
+  <div class="col-xl-7">
+    <div class="panel lens-panel">
+      <div class="panel-head flex-wrap gap-2">
+        <h2 class="mb-0"><i class="bi bi-eye"></i>Explainable Retina Lens</h2>
+        <div class="view-switch" role="group" aria-label="Image view">
+          <button type="button" class="btn active" aria-pressed="true" data-view="original"><i class="bi bi-image"></i> Original</button>
+          <button type="button" class="btn" aria-pressed="false" data-view="heatmap" {{ 'disabled' if not case.heatmap_path }}><i class="bi bi-fire"></i> Heatmap</button>
+          <button type="button" class="btn" aria-pressed="false" data-view="overlay" {{ 'disabled' if not case.overlay_path }}><i class="bi bi-layers"></i> Overlay</button>
+          <button type="button" class="btn" aria-pressed="false" data-view="compare" {{ 'disabled' if not case.overlay_path }}><i class="bi bi-layout-split"></i> Side by side</button>
+        </div>
+      </div>
+      <div class="p-3">
+        <div class="lens" id="lens">
+          <figure data-pane="original"><img src="{{ url_for('media', case_code=case.case_code, kind='original.png') }}" alt="Original fundus image"><figcaption>Original</figcaption></figure>
+          {% if case.heatmap_path %}<figure data-pane="heatmap" class="d-none"><img src="{{ url_for('media', case_code=case.case_code, kind='heatmap.png') }}" alt="Grad-CAM heatmap"><figcaption>Grad-CAM heatmap</figcaption></figure>{% endif %}
+          {% if case.overlay_path %}<figure data-pane="overlay" class="d-none"><img src="{{ url_for('media', case_code=case.case_code, kind='overlay.png') }}" alt="Grad-CAM overlay"><figcaption>Overlay</figcaption></figure>{% endif %}
+        </div>
+        {% if case.gradcam_error %}
+          <div class="alert alert-secondary small mt-3 mb-0"><i class="bi bi-exclamation-circle me-1"></i>{{ case.gradcam_error }}. The prediction is still available.</div>
+        {% else %}
+          <div class="lens-foot">
+            <span class="source-tag"><i class="bi bi-patch-check"></i> Uploaded image &amp; Grad-CAM generated for this case</span>
+            <div class="d-flex align-items-center gap-2 small text-muted"><span>Lower influence</span><span class="jet-scale"></span><span>Higher influence</span></div>
+          </div>
+        {% endif %}
+        <p class="small text-muted mt-2 mb-0"><i class="bi bi-info-circle me-1"></i>Grad-CAM shows image regions that most influenced the model's
+          “{{ case.predicted_label }}” output. It visualises model behaviour and does <strong>not</strong> independently confirm lesions or medical findings.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- RetinaGrade AI -->
+  <div class="col-xl-5">
+    <div class="panel">
+      <div class="panel-head"><h2 class="mb-0"><i class="bi bi-cpu"></i>RetinaGrade AI output</h2></div>
+      <div class="p-3">
+        <div class="result-hero">
+          <div class="flex-grow-1">
+            <div class="small text-muted mb-1">Predicted grade (model output)</div>
+            <span class="grade-pill lg g{{ case.predicted_grade }}">{{ case.predicted_grade }} · {{ case.predicted_label }}</span>
+          </div>
+          <div class="text-end">
+            <div class="score">{{ '%.1f' % (case.top_score * 100) }}%</div>
+            <div class="small text-muted">model confidence score</div>
+          </div>
+        </div>
+        <div class="small text-muted mt-2">Margin to next class: {{ '%.1f' % (case.score_margin * 100) }} percentage points</div>
+        <h3 class="h6 mt-4 mb-2">All five class scores</h3>
+        <div class="score-list">
+          {% for name in CLASS_NAMES %}
+          {% set s = case.scores[loop.index0] %}
+          <div class="score-row {{ 'is-top' if loop.index0 == case.predicted_grade }}" title="{{ name }}: {{ '%.2f' % (s * 100) }}%">
+            <div class="score-label">{{ loop.index0 }} · {{ name }}</div>
+            <div class="score-track"><div class="score-fill" style="width: {{ (s * 100) | round(1) }}%"></div></div>
+            <div class="score-value">{{ '%.1f' % (s * 100) }}%</div>
+          </div>
+          {% endfor %}
+        </div>
+        <p class="small text-muted mt-3 mb-0">Raw softmax outputs from the model. They sum to 100% and are not calibrated disease probabilities.</p>
+      </div>
+    </div>
+
+    <!-- Priority & Uncertainty -->
+    <div class="panel mt-4">
+      <div class="panel-head"><h2 class="mb-0"><i class="bi bi-sliders"></i>Priority &amp; uncertainty</h2>{{ priority_badge(case.priority) }}</div>
+      <div class="p-3">
+        {% if case.flags %}
+          {% for f in case.flags %}
+          <div class="flag flag-{{ f.code }}">
+            <div class="fw-semibold"><i class="bi {{ {'recapture':'bi-camera','quality_warning':'bi-exclamation-triangle','uncertain':'bi-question-circle','priority_grade':'bi-arrow-up-circle'}[f.code] }} me-1"></i>{{ f.title }}</div>
+            <div class="small">{{ f.reason }}</div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="flag flag-none"><div class="fw-semibold"><i class="bi bi-check2-circle me-1"></i>No review flags raised</div>
+            <div class="small">Routine operational priority under the current clinic rules. Clinician review is still required.</div></div>
+        {% endif %}
+        <p class="small text-muted mt-2 mb-0">Priority is operational (review order), <strong>not</strong> medical severity. Rules and thresholds are clinic-configurable and not clinically validated.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Image checks -->
+  <div class="col-xl-5">
+    <div class="panel h-100">
+      <div class="panel-head"><h2 class="mb-0"><i class="bi bi-camera"></i>Preliminary image checks</h2>{{ quality_badge(case.quality_status) }}</div>
+      <ul class="list-group list-group-flush">
+        {% for c in case.quality.checks %}
+        <li class="list-group-item d-flex gap-2"><span>{{ quality_badge(c.status) }}</span>
+          <div><div class="fw-semibold small">{{ c.name }}</div><div class="small text-muted">{{ c.message }}</div></div></li>
+        {% endfor %}
+      </ul>
+      <p class="small text-muted p-3 mb-0">Simple technical heuristics only. A pass does not guarantee the image is gradable.</p>
+    </div>
+  </div>
+
+  <!-- Clinician review -->
+  <div class="col-xl-7">
+    <div class="panel h-100">
+      <div class="panel-head"><h2 class="mb-0"><i class="bi bi-person-check"></i>Clinician review</h2>
+        {% if reviewer %}<span class="small text-muted">Last reviewed by {{ reviewer.full_name }} · {{ case.updated_at }}</span>{% endif %}</div>
+      <div class="p-3">
+        {% if current_user.role == 'doctor' %}
+        <form method="post" action="{{ url_for('review_case', case_code=case.case_code) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="row g-3">
+            <div class="col-md-6"><label class="form-label small fw-semibold" for="review_status">Review status</label>
+              <select class="form-select" id="review_status" name="review_status">
+                {% for k, v in REVIEW_STATUSES.items() %}<option value="{{ k }}" {{ 'selected' if k == case.review_status }}>{{ v }}</option>{% endfor %}
+              </select></div>
+            <div class="col-md-6"><label class="form-label small fw-semibold" for="clinician_assessment">Assessment of AI output</label>
+              <select class="form-select" id="clinician_assessment" name="clinician_assessment">
+                <option value="">Not recorded</option>
+                {% for k, v in ASSESSMENTS.items() %}<option value="{{ k }}" {{ 'selected' if k == case.clinician_assessment }}>{{ v }}</option>{% endfor %}
+              </select></div>
+            <div class="col-md-6"><label class="form-label small fw-semibold" for="clinician_grade">Clinician-recorded grade (optional)</label>
+              <select class="form-select" id="clinician_grade" name="clinician_grade">
+                <option value="">Not recorded</option>
+                {% for n in CLASS_NAMES %}<option value="{{ loop.index0 }}" {{ 'selected' if case.clinician_grade == loop.index0 }}>{{ loop.index0 }} · {{ n }}</option>{% endfor %}
+              </select></div>
+            <div class="col-12"><label class="form-label small fw-semibold" for="notes">Clinical notes</label>
+              <textarea class="form-control" id="notes" name="notes" rows="3" maxlength="4000" placeholder="Observations, follow-up decisions…">{{ case.notes or '' }}</textarea></div>
+          </div>
+          <button class="btn btn-navy mt-3" type="submit"><i class="bi bi-save"></i> Save review</button>
+          <p class="small text-muted mt-2 mb-0">Disagreement is recorded for audit; it does not prove that either the clinician or the model is correct.</p>
+        </form>
+        {% else %}
+          <dl class="row small mb-0">
+            <dt class="col-sm-5">Review status</dt><dd class="col-sm-7">{{ REVIEW_STATUSES[case.review_status] }}</dd>
+            <dt class="col-sm-5">Assessment of AI output</dt><dd class="col-sm-7">{{ ASSESSMENTS.get(case.clinician_assessment, 'Not recorded') }}</dd>
+            <dt class="col-sm-5">Clinician-recorded grade</dt><dd class="col-sm-7">{{ '%d · %s' % (case.clinician_grade, CLASS_NAMES[case.clinician_grade]) if case.clinician_grade is not none else 'Not recorded' }}</dd>
+            <dt class="col-sm-5">Clinical notes</dt><dd class="col-sm-7">{{ case.notes or '—' }}</dd>
+          </dl>
+          <p class="small text-muted mt-3 mb-0"><i class="bi bi-lock me-1"></i>Only ophthalmologists can record clinical reviews.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-6">
+    <div class="panel h-100">
+      <div class="panel-head"><h2 class="mb-0"><i class="bi bi-clock-history"></i>Case history</h2></div>
+      <ul class="timeline">
+        {% for e in history %}
+        <li><div class="small fw-semibold">{{ e.event_type.replace('_', ' ') | capitalize }}</div>
+          <div class="small text-muted">{{ e.created_at }} · {{ e.username or 'system' }}</div></li>
+        {% else %}<li class="small text-muted">No events.</li>{% endfor %}
+      </ul>
+    </div>
+  </div>
+  <div class="col-xl-6">
+    <div class="panel h-100">
+      <div class="panel-head"><h2 class="mb-0"><i class="bi bi-file-earmark-medical"></i>Reports for this case</h2></div>
+      {% if current_user.role in ['doctor', 'admin'] %}
+        {% if reports %}
+        <ul class="list-group list-group-flush">
+          {% for r in reports %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div><div class="small fw-semibold">{{ r.filename }}</div><div class="small text-muted">{{ r.generated_at }} · {{ r.full_name }}</div></div>
+            <a class="btn btn-sm btn-outline-navy" href="{{ url_for('download_report', report_id=r.id) }}"><i class="bi bi-download"></i></a>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}<div class="empty-state py-4"><i class="bi bi-file-earmark"></i><p class="small mb-0">No reports generated yet.</p></div>{% endif %}
+      {% else %}
+        <p class="small text-muted p-3 mb-0"><i class="bi bi-lock me-1"></i>Reports are available to ophthalmologists and administrators.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

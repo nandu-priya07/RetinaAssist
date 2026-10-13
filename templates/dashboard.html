@@ -1,0 +1,145 @@
+{% extends "app_base.html" %}
+{% from "partials/macros.html" import priority_badge, quality_badge, status_badge, grade_pill with context %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block content %}
+{% set role = current_user.role %}
+<section class="welcome-band">
+  <div class="rings" aria-hidden="true"></div>
+  <div class="position-relative d-flex flex-wrap justify-content-between align-items-end gap-3">
+    <div>
+      <div class="date">{{ now.strftime('%A, %d %B %Y') }}</div>
+      <h1 class="mt-1">Welcome back, {{ current_user.full_name }}</h1>
+      <p class="mb-0">
+        {% if stats.awaiting %}<strong class="text-white">{{ stats.awaiting }}</strong> case{{ '' if stats.awaiting == 1 else 's' }} awaiting clinician review{% if stats.high_open %}, including <strong class="text-white">{{ stats.high_open }}</strong> flagged for higher priority{% endif %}.
+        {% else %}The review queue is clear. New screenings will appear here automatically.{% endif %}
+      </p>
+    </div>
+    <div class="d-flex flex-wrap gap-2 position-relative" style="z-index:1; margin-right: 0">
+      {% if role in ['staff', 'doctor'] %}<a href="{{ url_for('screening') }}" class="btn btn-light"><i class="bi bi-cloud-arrow-up"></i> New screening</a>{% endif %}
+      <a href="{{ url_for('records', status='pending') }}" class="btn btn-ghost"><i class="bi bi-list-check"></i> Open review queue</a>
+    </div>
+  </div>
+</section>
+
+<div class="row g-3 mb-4">
+  {% for icon, label, value, link, accent in [
+    ('bi-images', 'Total screenings', stats.total or 0, url_for('records'), 'accent-navy'),
+    ('bi-hourglass-split', 'Awaiting review', stats.awaiting or 0, url_for('records', status='pending'), 'accent-teal'),
+    ('bi-arrow-up-circle', 'Higher priority (open)', stats.high_open or 0, url_for('records', priority='high'), 'accent-red'),
+    ('bi-calendar-check', 'Screened today', today, url_for('records'), 'accent-amber')] %}
+  <div class="col-6 col-xl-3">
+    <a class="stat-card {{ accent }}" href="{{ link }}">
+      <div class="stat-icon"><i class="bi {{ icon }}"></i></div>
+      <div><div class="stat-value">{{ value }}</div><div class="stat-label">{{ label }}</div></div>
+      <i class="bi bi-arrow-up-right go" aria-hidden="true"></i>
+    </a>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="row g-4">
+  <div class="col-xl-8">
+    <div class="panel">
+      <div class="panel-head">
+        <h2 class="mb-0"><i class="bi bi-list-check"></i>Review queue</h2>
+        <span class="small text-muted d-none d-sm-inline">Operational priority, then oldest first</span>
+      </div>
+      {% if queue %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead><tr><th>Case</th><th>Patient</th><th>Model output</th><th>Priority</th><th>Status</th></tr></thead>
+          <tbody>
+          {% for c in queue %}
+            <tr class="row-link" data-href="{{ url_for('analysis', case_code=c.case_code) }}">
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <img class="thumb" src="{{ url_for('media', case_code=c.case_code, kind='original.png') }}" alt="" loading="lazy">
+                  <div><a href="{{ url_for('analysis', case_code=c.case_code) }}" class="case-link">{{ c.case_code }}</a>
+                    <div class="small text-muted">{{ c.screened_at }}</div></div>
+                </div>
+              </td>
+              <td>{{ c.patient_code }}</td>
+              <td>{{ grade_pill(c.predicted_grade, c.predicted_label) }}</td>
+              <td>{{ priority_badge(c.priority) }}</td>
+              <td>{{ status_badge(c.review_status) }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state"><i class="bi bi-inbox"></i><p class="mb-1 fw-semibold">No cases awaiting review</p>
+        <p class="small text-muted mb-0">New screenings will appear here automatically.</p></div>
+      {% endif %}
+    </div>
+
+    <div class="panel mt-4">
+      <div class="panel-head"><h2 class="mb-0"><i class="bi bi-images"></i>Recent screenings</h2><a class="small fw-semibold text-decoration-none" href="{{ url_for('records') }}">View all <i class="bi bi-arrow-right"></i></a></div>
+      {% if recent %}
+      <div class="row g-3 p-3">
+        {% for c in recent %}
+        <div class="col-6 col-lg-4">
+          <a class="case-tile" href="{{ url_for('analysis', case_code=c.case_code) }}">
+            <div class="img-wrap">
+              <img src="{{ url_for('media', case_code=c.case_code, kind='original.png') }}" alt="Fundus image for {{ c.case_code }}" loading="lazy">
+              {{ quality_badge(c.quality_status) }}
+            </div>
+            <div class="p-3">
+              <div class="fw-semibold small text-truncate text-navy">{{ c.case_code }}</div>
+              <div class="small text-muted mb-2">{{ c.patient_code }} · {{ c.screened_at[:16] }}</div>
+              <div class="d-flex flex-wrap gap-1">{{ grade_pill(c.predicted_grade, c.predicted_label) }}</div>
+            </div>
+          </a>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-state"><i class="bi bi-images"></i><p class="mb-1 fw-semibold">No screenings yet</p>
+        <p class="small text-muted mb-0">{% if role in ['staff','doctor'] %}<a href="{{ url_for('screening') }}">Upload the first image</a> to start.{% else %}Screening staff and doctors can create screenings.{% endif %}</p></div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-xl-4">
+    <div class="panel">
+      <div class="panel-head"><h2 class="mb-0"><i class="bi bi-activity"></i>System status</h2></div>
+      <ul class="status-list">
+        <li><span class="status-dot {{ 'ok' if system.model_loaded else ('idle' if system.model_file else 'off') }}"></span>
+          <div><div class="k">Screening model</div>
+            <div class="v">{{ system.model_name }} ·
+              {% if system.model_loaded %}loaded and ready{% elif system.model_file %}loads on first analysis{% else %}model file missing{% endif %}</div></div></li>
+        <li><span class="status-dot {{ 'ok' if system.model_file else 'off' }}"></span>
+          <div><div class="k">Explainable Retina Lens</div><div class="v">Grad-CAM heatmaps generated for each analysis</div></div></li>
+        <li><span class="status-dot ok"></span>
+          <div><div class="k">Case database</div><div class="v">Local SQLite · {{ stats.total or 0 }} record{{ '' if stats.total == 1 else 's' }} · synthetic codes only</div></div></li>
+        <li><span class="status-dot ok"></span>
+          <div><div class="k">Review rules</div>
+            <div class="v">Uncertainty margin {{ (system.settings.uncertainty_margin|float * 100)|round|int }}% · priority grades {{ system.settings.priority_grades or 'none' }}
+              {% if role == 'admin' %}· <a href="{{ url_for('settings') }}">configure</a>{% endif %}</div></div></li>
+        <li><span class="status-dot {{ 'idle' if stats.quality_fail else 'ok' }}"></span>
+          <div><div class="k">Image recapture flags</div><div class="v">{{ stats.quality_fail or 0 }} case{{ '' if stats.quality_fail == 1 else 's' }} failed preliminary image checks
+            {% if stats.quality_fail %}· <a href="{{ url_for('records', quality='fail') }}">view</a>{% endif %}</div></div></li>
+      </ul>
+    </div>
+
+    <div class="panel mt-4">
+      <div class="panel-head"><h2 class="mb-0"><i class="bi bi-lightning-charge"></i>Quick actions</h2></div>
+      <div class="quick-actions">
+        {% if role in ['staff', 'doctor'] %}<a class="quick-action" href="{{ url_for('screening') }}"><i class="bi bi-cloud-arrow-up"></i>New screening</a>{% endif %}
+        <a class="quick-action" href="{{ url_for('records', status='pending') }}"><i class="bi bi-hourglass-split"></i>Pending reviews</a>
+        <a class="quick-action" href="{{ url_for('records') }}"><i class="bi bi-folder2-open"></i>Case records</a>
+        {% if role in ['doctor', 'admin'] %}
+        <a class="quick-action" href="{{ url_for('reports') }}"><i class="bi bi-file-earmark-medical"></i>Reports</a>
+        <a class="quick-action" href="{{ url_for('analytics') }}"><i class="bi bi-bar-chart-line"></i>Analytics</a>
+        {% endif %}
+        {% if role == 'admin' %}<a class="quick-action" href="{{ url_for('admin_users') }}"><i class="bi bi-people"></i>Manage users</a>{% endif %}
+        <a class="quick-action" href="{{ url_for('settings') }}"><i class="bi bi-gear"></i>Settings</a>
+      </div>
+    </div>
+
+    <p class="small text-muted mt-3 mb-0 px-1"><i class="bi bi-info-circle me-1"></i>AI outputs are screening support for clinician review, not diagnoses.
+      Model background and limitations: <a href="{{ url_for('about') }}">About</a>.</p>
+  </div>
+</div>
+{% endblock %}

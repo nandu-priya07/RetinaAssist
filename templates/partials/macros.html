@@ -1,0 +1,29 @@
+{% macro priority_badge(p) -%}
+<span class="badge-soft prio-{{ p }}"><i class="bi {{ {'high':'bi-arrow-up-circle','medium':'bi-dash-circle','routine':'bi-circle'}[p] }}"></i> {{ PRIORITY_LABELS[p] }}</span>
+{%- endmacro %}
+
+{% macro quality_badge(q) -%}
+<span class="badge-soft q-{{ q }}"><i class="bi {{ {'pass':'bi-check-circle','warning':'bi-exclamation-triangle','fail':'bi-x-octagon'}[q] }}"></i> {{ QUALITY_LABELS[q] }}</span>
+{%- endmacro %}
+
+{% macro status_badge(s) -%}
+<span class="badge-soft st-{{ s }}">{{ REVIEW_STATUSES[s] }}</span>
+{%- endmacro %}
+
+{% macro grade_pill(grade, label) -%}
+<span class="grade-pill g{{ grade }}">{{ grade }} · {{ label }}</span>
+{%- endmacro %}
+
+{# Single-series horizontal bar chart: one hue, direct value labels, hover tooltip, table-like text. #}
+{% macro hbar_chart(rows, unit='cases') -%}
+{% set maxv = (rows | map(attribute=1) | max) or 1 %}
+<div class="hbar-chart" role="table">
+  {% for label, value in rows %}
+  <div class="hbar-row" role="row" title="{{ label }}: {{ value }} {{ unit }}">
+    <div class="hbar-label" role="cell">{{ label }}</div>
+    <div class="hbar-track" role="cell"><div class="hbar-fill" style="width: {{ (value / maxv * 100) | round(1) }}%"></div></div>
+    <div class="hbar-value" role="cell">{{ value }}</div>
+  </div>
+  {% endfor %}
+</div>
+{%- endmacro %}

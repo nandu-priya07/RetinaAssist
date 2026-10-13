@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block body_class %}app{% endblock %}
+{% block layout %}
+{% set ep = request.endpoint %}
+{% set role = current_user.role %}
+<div class="app-shell">
+  <aside class="sidebar offcanvas-lg offcanvas-start" tabindex="-1" id="sidebar" aria-label="Main navigation">
+    <div class="sidebar-head">
+      <a class="brand text-white" href="{{ url_for('index') }}"><span class="brand-mark"><i class="bi bi-eye"></i></span> <span>Retina<span class="ai">Assist</span></span></a>
+      <button type="button" class="btn-close btn-close-white d-lg-none" data-bs-dismiss="offcanvas" data-bs-target="#sidebar" aria-label="Close"></button>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">Workspace</div>
+      <a class="{{ 'active' if ep == 'dashboard' }}" href="{{ url_for('dashboard') }}"><i class="bi bi-grid-1x2"></i> Dashboard</a>
+      {% if role in ['staff', 'doctor'] %}
+      <a class="{{ 'active' if ep == 'screening' }}" href="{{ url_for('screening') }}"><i class="bi bi-cloud-arrow-up"></i> New screening</a>
+      {% endif %}
+      <a class="{{ 'active' if ep in ['records', 'analysis'] }}" href="{{ url_for('records') }}"><i class="bi bi-folder2-open"></i> Case records</a>
+      {% if role in ['doctor', 'admin'] %}
+      <a class="{{ 'active' if ep == 'reports' }}" href="{{ url_for('reports') }}"><i class="bi bi-file-earmark-medical"></i> Reports</a>
+      <a class="{{ 'active' if ep == 'analytics' }}" href="{{ url_for('analytics') }}"><i class="bi bi-bar-chart-line"></i> Analytics</a>
+      {% endif %}
+      {% if role == 'admin' %}
+      <div class="nav-section">Administration</div>
+      <a class="{{ 'active' if ep == 'admin_users' }}" href="{{ url_for('admin_users') }}"><i class="bi bi-people"></i> Users &amp; access</a>
+      <a class="{{ 'active' if ep == 'audit' }}" href="{{ url_for('audit') }}"><i class="bi bi-shield-check"></i> Audit trail</a>
+      {% endif %}
+      <div class="nav-section">Account</div>
+      <a class="{{ 'active' if ep == 'settings' }}" href="{{ url_for('settings') }}"><i class="bi bi-gear"></i> Settings</a>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="sidebar-user">
+        <div class="avatar" aria-hidden="true">{{ current_user.full_name.replace('Dr. ', '')[:1] | upper }}{{ (current_user.full_name.split(' ')[-1][:1]) | upper }}</div>
+        <div class="min-w-0">
+          <div class="name text-truncate">{{ current_user.full_name }}</div>
+          <div class="role">{{ ROLE_LABELS[role] }}</div>
+        </div>
+      </div>
+      <div class="sidebar-note"><i class="bi bi-shield-exclamation"></i><span>Research prototype · not for clinical use</span></div>
+    </div>
+  </aside>
+
+  <div class="app-main">
+    <header class="topbar">
+      <button class="btn btn-light d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar" aria-label="Open navigation">
+        <i class="bi bi-list"></i>
+      </button>
+      <div class="topbar-title"><span class="crumb d-none d-sm-inline">RetinaAssist <i class="bi bi-chevron-right mx-1" style="font-size:.7rem"></i></span>{% block page_title %}{% endblock %}</div>
+      <div class="ms-auto d-flex align-items-center gap-3">
+        <div class="text-end d-none d-md-block lh-sm">
+          <div class="fw-semibold small">{{ current_user.full_name }}</div>
+          <div class="text-muted" style="font-size:.75rem">{{ ROLE_LABELS[role] }}</div>
+        </div>
+        <form method="post" action="{{ url_for('logout') }}" class="m-0">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-outline-secondary btn-sm" type="submit"><i class="bi bi-box-arrow-right"></i><span class="d-none d-sm-inline">Sign out</span></button>
+        </form>
+      </div>
+    </header>
+    <div class="prototype-banner"><i class="bi bi-info-circle me-1"></i>Research prototype — AI outputs support, and never replace, clinician judgement. Synthetic patient codes only.</div>
+    <main class="app-content">
+      {% include "partials/flashes.html" %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+{% endblock %}
