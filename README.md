@@ -85,25 +85,27 @@ test fixture (not a patient image), so its predictions are meaningless — it on
 
 ## Deployment
 
-The app is prepared for a **Hugging Face Space (Docker SDK)** on CPU Basic hardware (2 vCPU, 16 GB RAM, 50 GB
-non-persistent disk), which can run TensorFlow inference. CPU Basic has no hourly cost, but Hugging Face currently
-requires a **PRO subscription to create Docker Spaces** on personal accounts.
+The app is not currently deployed. It is prepared for any Docker host that can run TensorFlow on CPU
+(plan for at least 2 GB of RAM; small free tiers with ~512 MB are not enough).
 
-- `deploy/huggingface/Dockerfile` and `deploy/huggingface/README.md` go in the root of the Space repository.
-  The image clones this GitHub repository, verifies the model's SHA-256 checksum, and starts
-  `gunicorn wsgi:app` on port 7860. After pushing new commits to GitHub, use **Factory rebuild** in the Space settings.
-- The root `Dockerfile` builds the same image from a local checkout for any Docker host (port 7860).
-- Required **secrets** (Space settings → Variables and secrets; never commit them):
+- The root `Dockerfile` builds an image from this repository, verifies the model's SHA-256 checksum, and starts
+  `gunicorn wsgi:app` on the port given by the `PORT` environment variable (default 7860):
+
+  ```bash
+  docker build -t retinaassist .
+  docker run -p 7860:7860 -e RETINAASSIST_SECRET_KEY=... -e RETINAASSIST_DEMO_PASSWORD=...              -e RETINAASSIST_ADMIN_PASSWORD=... retinaassist
+  ```
+
+- Required **secrets** (set them in your host's secret/environment settings; never commit them):
   - `RETINAASSIST_SECRET_KEY` — long random string used to sign session cookies.
   - `RETINAASSIST_DEMO_PASSWORD` — password for the `doctor` and `staff` demo accounts.
   - `RETINAASSIST_ADMIN_PASSWORD` — a different password for the `admin` account.
-- `RETINAASSIST_ENV=production` is set in the image: the app refuses to start without the secrets above, uses
-  secure HTTPS-only session cookies, and runs without debug mode.
+- `RETINAASSIST_ENV=production` is set in the image: the app refuses to start without the secrets above, sends the
+  session cookie over HTTPS only, and runs without debug mode.
 
-**Hosting limitations:** free-hardware Spaces sleep after a period of inactivity and take a minute or two to wake up
-(the model loads at startup). The disk is temporary, so the SQLite database, uploaded images and PDF reports are
-**reset whenever the Space restarts or is rebuilt**, and demo data is visible to everyone using the shared demo
-accounts — never upload real patient images. Persistent storage would need a Storage Bucket or an external database.
+**Storage:** the SQLite database, uploaded images and PDF reports live in `instance/` inside the container. On hosts
+with temporary disks they are reset on every restart or redeploy, and demo data is visible to everyone using the shared
+demo accounts — never upload real patient images. Persistent storage needs a mounted volume or an external database.
 
 ## Responsible use and limitations
 

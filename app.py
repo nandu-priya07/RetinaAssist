@@ -75,9 +75,8 @@ def create_app(test_config=None):
             raise RuntimeError("Production requires these secrets to be set: " + ", ".join(missing))
         if os.environ["RETINAASSIST_ADMIN_PASSWORD"] == os.environ["RETINAASSIST_DEMO_PASSWORD"]:
             raise RuntimeError("RETINAASSIST_ADMIN_PASSWORD must differ from RETINAASSIST_DEMO_PASSWORD.")
-        # Served over HTTPS. Hugging Face Spaces also embeds the app in an iframe on huggingface.co,
-        # so the session cookie must be Secure and SameSite=None for sign-in to work there.
-        app.config.update(SESSION_COOKIE_SECURE=True, SESSION_COOKIE_SAMESITE="None", PRODUCTION=True)
+        # Served over HTTPS: only send the session cookie over secure connections.
+        app.config.update(SESSION_COOKIE_SECURE=True, PRODUCTION=True)
     if test_config:
         app.config.update(test_config)
 
