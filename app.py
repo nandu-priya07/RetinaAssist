@@ -50,7 +50,9 @@ PATIENT_CODE_RE = re.compile(r"^[A-Za-z0-9-]{3,20}$")
 
 
 def create_app(test_config=None):
-    app = Flask(__name__, instance_path=os.path.join(BASE_DIR, "instance"))
+    # Render mounts persistent storage at RETINAASSIST_DATA_DIR; local runs keep using instance/.
+    data_dir = os.environ.get("RETINAASSIST_DATA_DIR") or os.path.join(BASE_DIR, "instance")
+    app = Flask(__name__, instance_path=data_dir)
     os.makedirs(app.instance_path, exist_ok=True)
 
     app.config.update(

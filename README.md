@@ -85,27 +85,9 @@ test fixture (not a patient image), so its predictions are meaningless — it on
 
 ## Deployment
 
-The app is not currently deployed. It is prepared for any Docker host that can run TensorFlow on CPU
-(plan for at least 2 GB of RAM; small free tiers with ~512 MB are not enough).
+For the Render + Vercel deployment steps and configuration, see [HOSTING.md](HOSTING.md).
 
-- The root `Dockerfile` builds an image from this repository, verifies the model's SHA-256 checksum, and starts
-  `gunicorn wsgi:app` on the port given by the `PORT` environment variable (default 7860):
-
-  ```bash
-  docker build -t retinaassist .
-  docker run -p 7860:7860 -e RETINAASSIST_SECRET_KEY=... -e RETINAASSIST_DEMO_PASSWORD=...              -e RETINAASSIST_ADMIN_PASSWORD=... retinaassist
-  ```
-
-- Required **secrets** (set them in your host's secret/environment settings; never commit them):
-  - `RETINAASSIST_SECRET_KEY` — long random string used to sign session cookies.
-  - `RETINAASSIST_DEMO_PASSWORD` — password for the `doctor` and `staff` demo accounts.
-  - `RETINAASSIST_ADMIN_PASSWORD` — a different password for the `admin` account.
-- `RETINAASSIST_ENV=production` is set in the image: the app refuses to start without the secrets above, sends the
-  session cookie over HTTPS only, and runs without debug mode.
-
-**Storage:** the SQLite database, uploaded images and PDF reports live in `instance/` inside the container. On hosts
-with temporary disks they are reset on every restart or redeploy, and demo data is visible to everyone using the shared
-demo accounts — never upload real patient images. Persistent storage needs a mounted volume or an external database.
+This repository includes a Render Blueprint and a Vercel external rewrite. Render runs the Flask application; Vercel proxies requests to it. The Vercel project does not host a separate frontend build.
 
 ## Responsible use and limitations
 
