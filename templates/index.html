@@ -16,28 +16,57 @@
     animation: he-scan 6.5s ease-in-out 1.4s infinite; }
   .hero-eye .he-glow { position: absolute; left: 9%; top: 27%; width: 26%; height: 42%; border-radius: 50%; pointer-events: none;
     background: radial-gradient(closest-side, rgba(94, 214, 255, .22), rgba(94, 214, 255, 0)); mix-blend-mode: screen; animation: he-glow 7s ease-in-out 1s infinite; }
-  .hero-eye .he-card { position: absolute; display: flex; align-items: center; gap: .45rem; padding: .34rem .55rem; border-radius: 10px;
-    background: rgba(255, 255, 255, .82); backdrop-filter: blur(10px); border: 1px solid rgba(207, 225, 236, .9); box-shadow: 0 8px 22px -12px rgba(11, 37, 69, .3);
-    animation: he-fade .7s ease-out both; }
-  .hero-eye .he-card .ic { width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; background: #e3f4f4; color: #0f8b8d; font-size: .72rem; flex-shrink: 0; }
-  .hero-eye .he-card strong { font-size: .7rem; font-weight: 600; color: #0b2545; line-height: 1.2; white-space: nowrap; }
-  .hero-eye .he-c1 { top: 6px; left: 4%; animation-delay: .35s; }
-  .hero-eye .he-c2 { top: 6px; right: 2%; animation-delay: .45s; }
-  .hero-eye .he-c3 { bottom: 10px; left: 4%; animation-delay: .55s; }
-  .hero-eye .he-c4 { bottom: 10px; right: 2%; animation-delay: .65s; }
+  /* Feature callouts: accessible buttons connected to the eye by thin SVG lines */
+  .hero-eye { padding: 58px 0 64px; }
+  .hero-eye .he-links { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; z-index: 1; }
+  .hero-eye .he-line { fill: none; stroke: #19b3b5; stroke-width: 1.2; stroke-opacity: .55; stroke-linecap: round;
+    transition: stroke-opacity .25s, stroke-width .25s; }
+  .hero-eye .he-lines-drawn .he-line { transition: stroke-dashoffset 1.1s cubic-bezier(.4, 0, .2, 1), stroke-opacity .25s, stroke-width .25s; }
+  .hero-eye .he-node { fill: #fff; stroke: #19b3b5; stroke-width: 1.2; }
+  .hero-eye .he-anchor { fill: #5ed6ff; filter: drop-shadow(0 0 3px rgba(94, 214, 255, .9)); }
+  .hero-eye .he-pulse { fill: none; stroke: #5ed6ff; stroke-width: 1; transform-box: fill-box; transform-origin: center; animation: he-pulse 2.8s ease-out infinite; }
+  .hero-eye .he-link.is-dim .he-line { stroke-opacity: .25; }
+  .hero-eye .he-link.is-active .he-line { stroke: #0f8b8d; stroke-opacity: 1; stroke-width: 1.8; filter: drop-shadow(0 0 3px rgba(25, 179, 181, .65)); }
+  .hero-eye .he-link.is-active .he-node { stroke: #0f8b8d; fill: #e3f4f4; }
+  .hero-eye .he-labels { list-style: none; margin: 0; padding: 0; }
+  .hero-eye .he-feature { position: absolute; z-index: 2; display: flex; align-items: center; gap: .45rem; padding: .34rem .6rem .34rem .4rem; border-radius: 999px;
+    font: inherit; text-align: left; cursor: pointer; color: #0b2545;
+    background: rgba(255, 255, 255, .86); backdrop-filter: blur(10px); border: 1px solid rgba(207, 225, 236, .95); box-shadow: 0 8px 22px -12px rgba(11, 37, 69, .32);
+    transition: border-color .2s, box-shadow .25s, transform .2s, background .2s; animation: he-fade .7s ease-out both; }
+  .hero-eye .he-feature:hover { transform: translateY(-1px); border-color: #b9dcdc; }
+  .hero-eye .he-feature:focus-visible { outline: 2px solid #0f8b8d; outline-offset: 2px; }
+  .hero-eye .he-feature.is-active { background: #fff; border-color: #0f8b8d;
+    box-shadow: 0 0 0 3px rgba(25, 179, 181, .18), 0 10px 26px -10px rgba(15, 139, 141, .55); }
+  .hero-eye .he-feature .ic { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: #e3f4f4; color: #0f8b8d; font-size: .72rem; flex-shrink: 0; transition: background .2s, color .2s; }
+  .hero-eye .he-feature.is-active .ic { background: #0f8b8d; color: #fff; }
+  .hero-eye .he-feature strong { font-size: .7rem; font-weight: 600; line-height: 1.2; white-space: nowrap; }
+  .hero-eye .he-f1 { top: 6px; left: 12%; animation-delay: .35s; }
+  .hero-eye .he-f2 { top: 13%; right: 0; animation-delay: .45s; }
+  .hero-eye .he-f3 { bottom: 7%; left: 0; animation-delay: .55s; }
+  .hero-eye .he-f4 { bottom: 4px; right: 9%; animation-delay: .65s; }
+  .hero-eye .he-pop { position: absolute; z-index: 3; width: min(280px, 92%); padding: .65rem .8rem .7rem; border-radius: 12px; font-size: .76rem; line-height: 1.45; color: #435469;
+    background: rgba(255, 255, 255, .97); border: 1px solid #cfe3e6; box-shadow: 0 16px 36px -14px rgba(11, 37, 69, .35); animation: he-pop .18s ease-out; }
+  .hero-eye .he-pop strong { display: block; font-size: .78rem; color: #0b2545; margin-bottom: .2rem; }
+  .hero-eye .he-pop p { margin: 0; }
   .hero-eye-note { text-align: center; margin-top: .25rem; }
   @keyframes he-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
   @keyframes he-fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
   @keyframes he-scan { 0% { transform: translateX(-120%); opacity: 0; } 8% { opacity: 1; } 55% { opacity: 1; } 62% { transform: translateX(520%); opacity: 0; } 100% { transform: translateX(520%); opacity: 0; } }
   @keyframes he-glow { 0%, 100% { opacity: .55; } 50% { opacity: .85; } }
+  @keyframes he-pulse { 0% { transform: scale(.6); opacity: .9; } 70%, 100% { transform: scale(2.2); opacity: 0; } }
+  @keyframes he-pop { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
   @media (max-width: 575.98px) {
     .hero-eye { padding: 0; }
+    .hero-eye .he-links { display: none; }
     .hero-eye .he-labels { display: grid; grid-template-columns: 1fr 1fr; gap: .45rem; margin-top: .4rem; }
-    .hero-eye .he-card { position: static; }
-    .hero-eye .he-card strong { white-space: normal; }
+    .hero-eye .he-feature { position: static; border-radius: 12px; width: 100%; }
+    .hero-eye .he-feature strong { white-space: normal; }
+    .hero-eye .he-pop { position: static; width: 100%; margin-top: .5rem; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .hero-eye .he-stage, .hero-eye .he-card, .hero-eye .he-glow { animation: none; }
+    .hero-eye .he-stage, .hero-eye .he-feature, .hero-eye .he-glow, .hero-eye .he-pulse, .hero-eye .he-pop { animation: none; }
+    .hero-eye .he-pulse { display: none; }
+    .hero-eye .he-feature, .hero-eye .he-line { transition: none; }
     .hero-eye .he-scan { display: none; }
     .hero-eye .he-glow { opacity: .6; }
   }
@@ -68,11 +97,21 @@
             <div class="he-glow" aria-hidden="true"></div>
             <div class="he-scan" aria-hidden="true"></div>
           </div>
-          <div class="he-labels">
-            <div class="he-card he-c1"><div class="ic"><i class="bi bi-layers"></i></div><strong>Five-grade classification</strong></div>
-            <div class="he-card he-c2"><div class="ic"><i class="bi bi-fire"></i></div><strong>Grad-CAM explainability</strong></div>
-            <div class="he-card he-c3"><div class="ic"><i class="bi bi-camera"></i></div><strong>Image quality checks</strong></div>
-            <div class="he-card he-c4"><div class="ic"><i class="bi bi-person-check"></i></div><strong>Clinician-in-the-loop review</strong></div>
+          <svg class="he-links" aria-hidden="true" focusable="false">
+            <g class="he-link" data-i="1"><path class="he-line"/><circle class="he-node" r="2.6"/><circle class="he-pulse" r="4"/><circle class="he-anchor" r="2.6"/></g>
+            <g class="he-link" data-i="2"><path class="he-line"/><circle class="he-node" r="2.6"/><circle class="he-pulse" r="4"/><circle class="he-anchor" r="2.6"/></g>
+            <g class="he-link" data-i="3"><path class="he-line"/><circle class="he-node" r="2.6"/><circle class="he-pulse" r="4"/><circle class="he-anchor" r="2.6"/></g>
+            <g class="he-link" data-i="4"><path class="he-line"/><circle class="he-node" r="2.6"/><circle class="he-pulse" r="4"/><circle class="he-anchor" r="2.6"/></g>
+          </svg>
+          <ul class="he-labels" aria-label="RetinaAssist features">
+            <li><button type="button" class="he-feature he-f1" data-i="1" data-anchor="50,30" aria-expanded="false" aria-controls="he-pop" data-text="Classifies retinal images into five diabetic retinopathy severity categories. This is a research prototype, not a clinical diagnosis."><span class="ic" aria-hidden="true"><i class="bi bi-layers"></i></span><strong>Five-grade classification</strong></button></li>
+            <li><button type="button" class="he-feature he-f2" data-i="2" data-anchor="58,47.5" aria-expanded="false" aria-controls="he-pop" data-text="Displays a heatmap of image regions that influenced the model’s prediction. The heatmap is an aid to interpretation, not proof of disease."><span class="ic" aria-hidden="true"><i class="bi bi-fire"></i></span><strong>Grad-CAM explainability</strong></button></li>
+            <li><button type="button" class="he-feature he-f3" data-i="3" data-anchor="22,48" aria-expanded="false" aria-controls="he-pop" data-text="Checks image suitability and flags potential quality issues before interpreting the model’s output."><span class="ic" aria-hidden="true"><i class="bi bi-camera"></i></span><strong>Image quality checks</strong></button></li>
+            <li><button type="button" class="he-feature he-f4" data-i="4" data-anchor="45,79" aria-expanded="false" aria-controls="he-pop" data-text="Allows a clinician to review the model output. Clinical decisions must rely on qualified professional assessment."><span class="ic" aria-hidden="true"><i class="bi bi-person-check"></i></span><strong>Clinician-in-the-loop review</strong></button></li>
+          </ul>
+          <div class="he-pop" id="he-pop" role="region" aria-live="polite" aria-labelledby="he-pop-title" hidden>
+            <strong id="he-pop-title"></strong><p id="he-pop-text"></p>
+          </div>
           </div>
         </div>
         <div class="hero-eye-note"><span class="illus-tag"><i class="bi bi-palette"></i> Illustration — not a patient scan</span></div>
@@ -192,4 +231,145 @@
     </div>
   </div>
 </section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+/* Home hero: connect feature callouts to the eye illustration and show explanations on click. */
+(function () {
+  var root = document.querySelector('.hero-eye');
+  if (!root) return;
+  var stage = root.querySelector('.he-stage');
+  var svg = root.querySelector('.he-links');
+  var pop = document.getElementById('he-pop');
+  var popTitle = document.getElementById('he-pop-title');
+  var popText = document.getElementById('he-pop-text');
+  var buttons = Array.prototype.slice.call(root.querySelectorAll('.he-feature'));
+  var mobile = window.matchMedia('(max-width: 575.98px)');
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+  var active = null;
+  var animated = false;
+
+  function linkFor(btn) { return svg.querySelector('.he-link[data-i="' + btn.dataset.i + '"]'); }
+  function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+  // Anchor on the illustration (given as % of the image), converted to pixels inside .hero-eye.
+  function anchorPoint(btn, r) {
+    var s = stage.getBoundingClientRect();
+    var p = btn.dataset.anchor.split(',').map(Number);
+    return { x: s.left - r.left + s.width * p[0] / 100, y: s.top - r.top + s.height * p[1] / 100 };
+  }
+
+  // Attach the connector to the label edge that faces the anchor.
+  function labelPoint(btn, a, r) {
+    var b = btn.getBoundingClientRect();
+    var left = b.left - r.left, top = b.top - r.top;
+    if (a.y > top + b.height) return { x: clamp(a.x, left + 14, left + b.width - 14), y: top + b.height };
+    if (a.y < top) return { x: clamp(a.x, left + 14, left + b.width - 14), y: top };
+    return { x: a.x > left + b.width / 2 ? left + b.width : left, y: top + b.height / 2 };
+  }
+
+  function draw() {
+    if (mobile.matches) return;
+    var r = root.getBoundingClientRect();
+    svg.setAttribute('viewBox', '0 0 ' + r.width + ' ' + r.height);
+    buttons.forEach(function (btn) {
+      var g = linkFor(btn), a = anchorPoint(btn, r), p = labelPoint(btn, a, r);
+      var vertical = Math.abs(a.y - p.y) > Math.abs(a.x - p.x) * 0.35;
+      var my = (p.y + a.y) / 2, mx = (p.x + a.x) / 2;
+      var d = vertical
+        ? 'M' + p.x + ',' + p.y + ' C' + p.x + ',' + my + ' ' + a.x + ',' + my + ' ' + a.x + ',' + a.y
+        : 'M' + p.x + ',' + p.y + ' C' + mx + ',' + p.y + ' ' + mx + ',' + a.y + ' ' + a.x + ',' + a.y;
+      g.querySelector('.he-line').setAttribute('d', d);
+      var node = g.querySelector('.he-node');
+      node.setAttribute('cx', p.x); node.setAttribute('cy', p.y);
+      ['.he-anchor', '.he-pulse'].forEach(function (sel) {
+        var c = g.querySelector(sel);
+        c.setAttribute('cx', a.x); c.setAttribute('cy', a.y);
+      });
+    });
+    if (!animated) { animated = true; animateLines(); }
+    placePop();
+  }
+
+  // Subtle one-time "drawing" of the connectors on load.
+  function animateLines() {
+    if (reduced.matches) return;
+    var lines = Array.prototype.slice.call(svg.querySelectorAll('.he-line'));
+    lines.forEach(function (line, i) {
+      var len = line.getTotalLength();
+      line.style.strokeDasharray = len;
+      line.style.strokeDashoffset = len;
+      line.style.transitionDelay = (0.5 + i * 0.12) + 's';
+    });
+    svg.getBoundingClientRect();
+    svg.classList.add('he-lines-drawn');
+    lines.forEach(function (line) { line.style.strokeDashoffset = '0'; });
+    setTimeout(function () {
+      lines.forEach(function (line) {
+        line.style.strokeDasharray = ''; line.style.strokeDashoffset = ''; line.style.transitionDelay = '';
+      });
+      svg.classList.remove('he-lines-drawn');
+    }, 2200);
+  }
+
+  function placePop() {
+    if (!active || pop.hidden || mobile.matches) { pop.style.left = pop.style.top = ''; return; }
+    var r = root.getBoundingClientRect(), b = active.getBoundingClientRect();
+    var left = b.left - r.left, top = b.top - r.top;
+    var w = pop.offsetWidth, h = pop.offsetHeight;
+    var below = top + b.height / 2 < r.height / 2;
+    pop.style.left = clamp(left + b.width / 2 - w / 2, 0, r.width - w) + 'px';
+    pop.style.top = (below ? top + b.height + 8 : top - h - 8) + 'px';
+  }
+
+  function setLinks(btn) {
+    Array.prototype.forEach.call(svg.querySelectorAll('.he-link'), function (g) {
+      var on = btn && g.dataset.i === btn.dataset.i;
+      g.classList.toggle('is-active', !!on);
+      g.classList.toggle('is-dim', !!btn && !on);
+    });
+  }
+
+  function close(returnFocus) {
+    if (!active) return;
+    var prev = active;
+    prev.classList.remove('is-active');
+    prev.setAttribute('aria-expanded', 'false');
+    setLinks(null);
+    pop.hidden = true;
+    active = null;
+    if (returnFocus) prev.focus();
+  }
+
+  function open(btn) {
+    if (active) close(false);
+    active = btn;
+    btn.classList.add('is-active');
+    btn.setAttribute('aria-expanded', 'true');
+    setLinks(btn);
+    popTitle.textContent = btn.querySelector('strong').textContent;
+    popText.textContent = btn.dataset.text;
+    pop.hidden = false;
+    placePop();
+  }
+
+  buttons.forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (active === btn) close(false); else open(btn);
+    });
+  });
+  pop.addEventListener('click', function (e) { e.stopPropagation(); });
+  document.addEventListener('click', function () { close(false); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && active) close(true); });
+
+  if ('ResizeObserver' in window) new ResizeObserver(draw).observe(root);
+  window.addEventListener('resize', draw);
+  var img = stage.querySelector('img');
+  if (img && !img.complete) img.addEventListener('load', draw);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
+  draw();
+})();
+</script>
 {% endblock %}
